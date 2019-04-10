@@ -19,4 +19,4 @@
 
 
 # Programming lab №6
-![image](data/task6.png)
+![image](data/task6.jpg)

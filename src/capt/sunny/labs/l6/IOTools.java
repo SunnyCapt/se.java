@@ -5,9 +5,7 @@ import capt.sunny.labs.l6.serv.CreatureMap;
 import java.io.*;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class IOTools {
     public static String getMultiline(BufferedReader paramBufferedReader) throws IOException {
@@ -17,6 +15,7 @@ public class IOTools {
         int intChar = paramBufferedReader.read();
         char c;
         boolean wasEnd = false;
+        boolean startParameters = false;
         for (; ; ) {
             if (wasEnd && (intChar == 10 || intChar == 13))
                 break;
@@ -33,12 +32,18 @@ public class IOTools {
             } else if (((c != ';') && (c != '\n') && (c != '\r') && (c != ' ')) || (isParameter)) {
                 mainStringBuilder.append(c);
             }
-            if (!isParameter) {
-                withoutParametersStringBuilder.append(c);
+            if (!startParameters) {
+                if (c != '{') {
+                    c = c == '\n' ? '*' : c;
+                    c = c == '\r' ? '*' : c;
+                    withoutParametersStringBuilder.append(c);
+                } else {
+                    startParameters = true;
+                }
             }
             intChar = paramBufferedReader.read();
         }
-        return String.format("{\"fullCommandInput\":%s, \"withoutParametersInput\":%s}",mainStringBuilder.toString(), withoutParametersStringBuilder.toString());
+        return String.format("{\"fullCommandInput\":\"%s\", \"withoutParametersInput\":\"%s\"}", mainStringBuilder.toString(), withoutParametersStringBuilder.toString().replace(":", "^").replace("{", "^").replace("}", "^").replace("\"", "^"));
 
     }
 
@@ -61,7 +66,7 @@ public class IOTools {
                     if (index <= 8) fileLines.get(fileLines.size() - 1)[index] = sb.toString();
                     break;
                 } else if (ch == '\n' && flage) {
-                    if (index != 8 && index!=9) {
+                    if (index != 8 && index != 9) {
                         throw new InvalidParameterException(String.format((index < 9 ? "Lacks" : "Too much") + " parameters in %d line. (must be 10)\n", fileLines.size()));
                     }
                     fileLines.get(fileLines.size() - 1)[index] = sb.toString();
@@ -110,13 +115,13 @@ public class IOTools {
         return creatureMap;
     }
 
-    public static String getCSVQuotes(String src){
+    public static String getCSVQuotes(String src) {
 //        StringBuilder sb = new StringBuilder(src);
 //        for (int i=1;i<src.length();i++){
 //            if (src.charAt(i-1)==src.charAt(i))
 //                sb.replace(i, i+1, "");
 //        }
 //        return sb.toString();
-        return src.replace("\"","\"\"");
+        return src.replace("\"", "\"\"");
     }
 }

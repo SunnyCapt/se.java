@@ -21,6 +21,7 @@ public class Command {
                     "\t                   \"height\":345.34,\n" +
                     "\t                   \"type\":\"human\",\n" +
                     "\t                   \"isLive\":true,\n" +
+                    "\t                   \"creationDate\":\"10 Apr 2019 17:42:26 GMT\",\n" +
                     "\t                   \"location\":{\n" +
                     "\t                           \"x\":23.23,\n" +
                     "\t                           \"y\":23.2,\n" +
@@ -38,6 +39,7 @@ public class Command {
                     "\t                   \"height\":345.34,\n" +
                     "\t                   \"type\":\"human\",\n" +
                     "\t                   \"isLive\":true,\n" +
+                    "\t                   \"creationDate\":\"10 Apr 2019 17:42:26 GMT\",\n" +
                     "\t                   \"location\":{\n" +
                     "\t                           \"x\":23.23,\n" +
                     "\t                           \"y\":23.2,\n" +
@@ -56,9 +58,9 @@ public class Command {
                     "\t              \"key\":\"key0\"\n" +
                     "\t            }\n";
 
-    private static String multilineHelpInfo = "\nmultiline\n\tвыключить(если включен)/включить(если выключен) многострочный ввод\n";
+    //private static String multilineHelpInfo = "\nmultiline\n\tвыключить(если включен)/включить(если выключен) многострочный ввод\n";
     private static String envHelpInfo = "\nenvironment variable:\n\tYou set charset before start programm. \n\tIn the console: set CHARSET5=smth_charset\n\n\tTo set the file path: set FILE_FOR_5LAB=path/to/file.csv\n";
-    private static String help = infoHelpInfo + showHelpInfo + saveHelpInfo + envHelpInfo + helpHelpInfo + exitHelpInfo + multilineHelpInfo + insertHelpInfo + add_if_minHelpInfo + remove_lowerHelpInfo + removeHelpInfo;
+    private static String help = infoHelpInfo + showHelpInfo + saveHelpInfo + envHelpInfo + helpHelpInfo + exitHelpInfo +  insertHelpInfo + add_if_minHelpInfo + remove_lowerHelpInfo + removeHelpInfo; //multilineHelpInfo
 
     public String getName() {
         return name;

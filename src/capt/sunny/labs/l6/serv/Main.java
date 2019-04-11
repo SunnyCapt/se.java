@@ -13,6 +13,7 @@ import java.util.Map;
 public class Main {
     static String fileName;
     static String charsetName = "UTF-8";
+    static int servPort = 1337;
 
 
     public static void main(String[] args) {
@@ -22,8 +23,10 @@ public class Main {
         Command command;
         setClientConfig();
         CreatureMap creatureMap = IOTools.getCreatureMapFromFile(fileName, charsetName);
-        try (ServerSocket servSocket = new ServerSocket(1337)) {
+        try (ServerSocket servSocket = new ServerSocket(servPort)) {
+            System.out.printf("Server is running on port %d\n",servPort);
             Socket client = servSocket.accept();
+            System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(),client.getPort());
             DataOutputStream outputStream = new DataOutputStream(client.getOutputStream());
             DataInputStream inputStream = new DataInputStream(client.getInputStream());
             while (!client.isClosed()) {
@@ -50,7 +53,7 @@ public class Main {
                 outputStream.writeUTF(message/*new String(message.getBytes(), Charset.forName(charsetName))*/);
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
     }

@@ -163,7 +163,7 @@ public class Creature implements CreatureInt {
         if (this.hashCode() == otherCreature.hashCode()) {
             return 0;
         } else {
-            return (this.age < otherCreature.age ? -1 : 1);
+            return (this.size < otherCreature.size ? -1 : 1);
         }
     }
 

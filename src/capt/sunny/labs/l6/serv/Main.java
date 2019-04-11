@@ -5,8 +5,10 @@ import org.json.JSONObject;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.InvalidParameterException;
 import java.util.Map;
 
@@ -23,38 +25,46 @@ public class Main {
         Command command;
         setClientConfig();
         CreatureMap creatureMap = IOTools.getCreatureMapFromFile(fileName, charsetName);
-        try (ServerSocket servSocket = new ServerSocket(servPort)) {
-            System.out.printf("Server is running on port %d\n",servPort);
-            Socket client = servSocket.accept();
-            System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(),client.getPort());
-            DataOutputStream outputStream = new DataOutputStream(client.getOutputStream());
-            DataInputStream inputStream = new DataInputStream(client.getInputStream());
-            while (!client.isClosed()) {
-                try {
-                    multilineCommand = inputStream.readUTF();
-                    JSONObject rawCommand = new JSONObject(multilineCommand);
-                    System.out.printf("Command from %s:%d : %s\n",client.getInetAddress().getHostAddress(),client.getPort(), rawCommand.get("fullCommandInput"));
-                    commandLine = rawCommand.getString("fullCommandInput");
-                    command = Command.getCommand(commandLine);
-                    if (!(rawCommand.getString("withoutParametersInput").contains(command.getName()))) {
-                        throw new InvalidParameterException("command not found");
-                    }
 
-                    if (commandLine.equals("")) {
-                        message = "Enter command\n";
-                    } else {
-                        message = command.executeCommand(creatureMap, fileName, charsetName);
+        while (true) {
+            try (ServerSocket servSocket = new ServerSocket(servPort)) {
+                System.out.printf("Server is running on port %d\n", servPort);
+                Socket client = servSocket.accept();
+                System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
+                DataOutputStream outputStream = new DataOutputStream(client.getOutputStream());
+                DataInputStream inputStream = new DataInputStream(client.getInputStream());
+                while (!client.isClosed()) {
+                    try {
+                        multilineCommand = inputStream.readUTF();
+                        JSONObject rawCommand = new JSONObject(multilineCommand);
+                        System.out.printf("Command from %s:%d : %s\n", client.getInetAddress().getHostAddress(), client.getPort(), rawCommand.get("fullCommandInput"));
+                        commandLine = rawCommand.getString("fullCommandInput");
+                        command = Command.getCommand(commandLine);
+                        if (!(rawCommand.getString("withoutParametersInput").contains(command.getName()))) {
+                            throw new InvalidParameterException("command not found");
+                        }
+
+                        if (commandLine.equals("")) {
+                            message = "Enter command\n";
+                        } else {
+                            message = command.executeCommand(creatureMap, fileName, charsetName);
+                        }
+                    } catch (InvalidParameterException e) {
+                        message = "Invalid command: " + e.getMessage();
+                    } catch (FileSavingException e) {
+                        message = e.getMessage();
+                    } catch (SocketException e) {
+                        System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
+                        client.close();
+                        break;
                     }
-                } catch (InvalidParameterException e) {
-                    message = "Invalid command: " + e.getMessage();
-                } catch (FileSavingException e) {
-                    message = e.getMessage();
+                    outputStream.writeUTF(message/*new String(message.getBytes(), Charset.forName(charsetName))*/);
                 }
-                outputStream.writeUTF(message/*new String(message.getBytes(), Charset.forName(charsetName))*/);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
 
     }
 

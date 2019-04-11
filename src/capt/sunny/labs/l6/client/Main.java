@@ -102,7 +102,7 @@ Creature's structure
 }
  */
 /*
-"key","name","age","height","type","isLive","x","y","z"
+"key","name","age","height","type","isLive","x","y","z","creationDate"
 */
 
 /*

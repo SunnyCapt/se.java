@@ -1,68 +1,43 @@
 package capt.sunny.labs.l6.serv;
 
-import capt.sunny.labs.l6.IOTools;
-import org.json.JSONObject;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.security.InvalidParameterException;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
     static String fileName;
     static String charsetName = "UTF-8";
     static int servPort = 1337;
-
+    static ExecutorService executeIt = Executors.newFixedThreadPool(4);
 
     public static void main(String[] args) {
-        String message;
-        String multilineCommand;
-        String commandLine;
-        Command command;
+        String messFromAdmin;
+        try (ServerSocket server = new ServerSocket(servPort);
+             BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+            System.out.printf("Server is running on port %d\n", servPort);
+            while (!server.isClosed()) {
+                if (br.ready()) {
+                    messFromAdmin = br.readLine();
+                    System.out.printf("You write: %s", messFromAdmin);
+                }
+
+                Socket client = server.accept();
+                executeIt.execute(new MSocket(client));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         setClientConfig();
-        CreatureMap creatureMap = IOTools.getCreatureMapFromFile(fileName, charsetName);
 
         while (true) {
-            try (ServerSocket servSocket = new ServerSocket(servPort)) {
-                System.out.printf("Server is running on port %d\n", servPort);
-                Socket client = servSocket.accept();
-                System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
-                DataOutputStream outputStream = new DataOutputStream(client.getOutputStream());
-                DataInputStream inputStream = new DataInputStream(client.getInputStream());
-                while (!client.isClosed()) {
-                    try {
-                        multilineCommand = inputStream.readUTF();
-                        JSONObject rawCommand = new JSONObject(multilineCommand);
-                        System.out.printf("Command from %s:%d : %s\n", client.getInetAddress().getHostAddress(), client.getPort(), rawCommand.get("fullCommandInput"));
-                        commandLine = rawCommand.getString("fullCommandInput");
-                        command = Command.getCommand(commandLine);
-                        if (!(rawCommand.getString("withoutParametersInput").contains(command.getName()))) {
-                            throw new InvalidParameterException("command not found");
-                        }
 
-                        if (commandLine.equals("")) {
-                            message = "Enter command\n";
-                        } else {
-                            message = command.executeCommand(creatureMap, fileName, charsetName);
-                        }
-                    } catch (InvalidParameterException e) {
-                        message = "Invalid command: " + e.getMessage();
-                    } catch (FileSavingException e) {
-                        message = e.getMessage();
-                    } catch (SocketException e) {
-                        System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
-                        client.close();
-                        break;
-                    }
-                    outputStream.writeUTF(message/*new String(message.getBytes(), Charset.forName(charsetName))*/);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
 

@@ -113,6 +113,10 @@ public class Command {
     public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException {
         JSONObject parsedFirstParameter;
         JSONObject parsedSecondParameter;
+
+        if (creatureMap == null)
+            throw new InvalidParameterException("Collection not loaded. To load, use the load or import.\n");
+
         try {
             parsedFirstParameter = firstParameter == null ? null : new JSONObject(firstParameter);
             if (secondParameter != null) {

@@ -10,8 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
-    static String fileName;
-    static String charsetName = "UTF-8";
+
     static int servPort = 1337;
     static ExecutorService executeIt = Executors.newFixedThreadPool(4);
 
@@ -32,32 +31,6 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-        setClientConfig();
-
-        while (true) {
-
-        }
-
-
     }
 
-    public static void setClientConfig() {
-        Map<String, String> env = System.getenv();
-        fileName = env.get("FILE_FOR_5LAB");
-//        charsetName = env.get("CHARSET5");
-//        if (charsetName == null) {
-//            charsetName = "UTF-8";
-//        }
-        if (fileName == null) {
-            System.out.println("Set an environment variable named \"FILE_FOR_5LAB\"");
-            System.exit(-1);
-        }
-//        try {
-//            System.setOut(new PrintStream(System.out, true, charsetName));
-//        } catch (UnsupportedEncodingException e) {
-//            System.out.printf("Change CHARSET5 environment variable: UnsupportedEncodingException %s", charsetName);
-//        }
-    }
 }

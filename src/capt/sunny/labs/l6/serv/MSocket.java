@@ -1,13 +1,15 @@
 package capt.sunny.labs.l6.serv;
 
-import org.json.JSONObject;
+import capt.sunny.labs.l6.CommandWithObject;
+import capt.sunny.labs.l6.Creature;
+import capt.sunny.labs.l6.IOTools;
+import capt.sunny.labs.l6.StringWrapper;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.InvalidParameterException;
+import java.util.List;
 import java.util.Map;
 
 
@@ -30,47 +32,89 @@ public class MSocket implements Runnable {
     @Override
     public void run() {
         System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
-        try (DataOutputStream outputStream = new DataOutputStream(client.getOutputStream());
-             DataInputStream inputStream = new DataInputStream(client.getInputStream())) {
+        setClientConfig();
 
-            String message = "";
-            CreatureMap creatureMap = null;
 
+        String message = "";
+        CreatureMap creatureMap = null;
+        try (ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+             InputStream inputStream = client.getInputStream()) {
+            finish:
             while (!client.isClosed()) {
                 try {
-                    String multilineCommand = inputStream.readUTF();
-                    JSONObject rawCommand = new JSONObject(multilineCommand);
-                    System.out.printf("Command from %s:%d : %s\n", client.getInetAddress().getHostAddress(), client.getPort(), rawCommand.get("fullCommandInput"));
-                    String commandLine = rawCommand.getString("fullCommandInput");
+                    CommandWithObject<Creature> commandWithObject = IOTools.readObjectFromStream(inputStream);
+
+                    System.out.println(commandWithObject.getCommand());
+                    String multilineCommand = commandWithObject.getCommand();
+                    int indexOfFullCommandName = multilineCommand.lastIndexOf("\n");
+                    String commandLine = multilineCommand.substring(0, indexOfFullCommandName);
+                    System.out.printf("Command from %s:%d : %s\n", client.getInetAddress().getHostAddress(), client.getPort(), commandLine);
+                    //String commandLine = rawCommand.getString("fullCommandInput");
                     Command command = Command.getCommand(commandLine);
-                    if (!(rawCommand.getString("withoutParametersInput").contains(command.getName()))) {
-                        throw new InvalidParameterException("command not found");
+                    if (!(multilineCommand.substring(indexOfFullCommandName).contains(command.getName()))) {
+                        throw new InvalidParameterException("command not found\n");
                     }
 
                     if (commandLine.equals("")) {
                         message = "Enter command\n";
                     } else {
                         message = command.executeCommand(creatureMap, fileName, charsetName);
+                        if (command.name.equals("load")) {
+                            //if (fileName == null)
+                            fileName = message;
+                            creatureMap = IOTools.getCreatureMapFromFile(fileName, charsetName);
+                            message = "File loaded";
+                        }
+
                     }
 
+                } catch (EOFException e) {
+                    System.out.printf("Connection with %s:%d broke: %s\n", client.getInetAddress().getHostAddress(), client.getPort(), e.getMessage());
+                    break finish;
                 } catch (InvalidParameterException e) {
                     message = "Invalid command: " + e.getMessage();
+                    ////////////////////////////////
                 } catch (FileSavingException e) {
                     message = e.getMessage();
                 } catch (SocketException e) {
                     System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
-                    break;
+                    break finish;
                 } catch (IOException e) {
                     e.printStackTrace();
+                } catch (Exception e) {
+                    RuntimeException innerExc = new RuntimeException(String.format("Unknow exception: %s:%d ", client.getInetAddress().getHostAddress(), client.getPort()));
+                    innerExc.initCause(e);
+                    System.out.println(e.getMessage());
+                    break finish;
                 }
-                outputStream.writeUTF(message/*new String(message.getBytes(), Charset.forName(charsetName))*/);
-            }
 
+                List<String> strWrp = IOTools.getStringChunks(message);
+                for (int i = 0; i < strWrp.size(); i++) {
+                    oos.writeObject(new StringWrapper(strWrp.get(i), i, strWrp.size()));
+                    oos.flush();
+                    Thread.sleep(300);
+
+                    System.out.printf("Send: %d\n", i);
+                }
+
+
+                System.out.println(message);
+
+
+            }
             client.close();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+        System.out.println("point1");
     }
+
+
+
 
     public void setClientConfig() {
         Map<String, String> env = System.getenv();

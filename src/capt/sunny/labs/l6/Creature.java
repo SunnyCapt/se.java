@@ -1,5 +1,7 @@
-package capt.sunny.labs.l6.serv;
+package capt.sunny.labs.l6;
 
+import capt.sunny.labs.l6.serv.Point;
+import capt.sunny.labs.l6.serv.PointInt;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,19 +18,19 @@ interface LocationInt {
 
 interface CreatureInt extends LocationInt {
     void die();
-
     void say(String _str);
 }
 
 public class Creature implements CreatureInt {
+    private static double version = 1.0;
     protected String type;
     protected boolean isLive;
     protected int age;
     protected String name;
     protected double height;
     protected PointInt location;
-    protected double size;
-    protected Date creationDate;
+    private double size;
+    private Date creationDate;
 
     public Creature(String _type, int _age, String _name, double _height, Point _point) {
         name = _name;
@@ -41,11 +43,12 @@ public class Creature implements CreatureInt {
         setSize();
     }
 
+
     public Creature(String _type, int _age, String _name, double _height, Point _point, String _GMTString) {
         try {
             creationDate = new Date(_GMTString);
         } catch (IllegalArgumentException e) {
-            throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: " + new Date().toGMTString() +"\n");
+            throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: " + new Date().toGMTString() + "\n");
         }
         name = _name;
         age = _age;
@@ -55,8 +58,6 @@ public class Creature implements CreatureInt {
         location = _point;
         setSize();
     }
-
-    //date.toGMTString()
 
     public Creature(JSONObject jsonObject) {
         try {
@@ -79,6 +80,8 @@ public class Creature implements CreatureInt {
             throw new InvalidParameterException("Creature object cannot be created: invalid json structure\n");
         }
     }
+
+    //date.toGMTString()
 
     public Creature(String[] line) {
         if (line.length != 10 && line.length != 9) {
@@ -106,10 +109,14 @@ public class Creature implements CreatureInt {
             } catch (JSONException e) {
                 creationDate = new Date();
             }
-        }else{
+        } else {
             creationDate = new Date();
         }
 
+    }
+
+    public static double getVersion() {
+        return version;
     }
 
     private void checkParameters() {

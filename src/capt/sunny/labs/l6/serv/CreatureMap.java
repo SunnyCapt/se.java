@@ -1,6 +1,8 @@
 package capt.sunny.labs.l6.serv;
 
 
+import capt.sunny.labs.l6.Creature;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;

@@ -27,6 +27,7 @@ public class IOTools {
             }
             if (c == '"') {
                 isParameter = !isParameter;
+                mainStringBuilder.append(c);
             } else if (c == ';' && !isParameter) {
                 wasEnd = true;
             } else if (((c != ';') && (c != '\n') && (c != '\r') && (c != ' ')) || (isParameter)) {
@@ -43,7 +44,7 @@ public class IOTools {
             }
             intChar = paramBufferedReader.read();
         }
-        return String.format("{\"fullCommandInput\":\"%s\", \"withoutParametersInput\":\"%s\"}", mainStringBuilder.toString(), withoutParametersStringBuilder.toString().replace(":", "^").replace("{", "^").replace("}", "^").replace("\"", "^"));
+        return String.format("%s\n%s", mainStringBuilder.toString(), withoutParametersStringBuilder.toString().replace("\n", "^").replace(":", "^").replace("{", "^").replace("}", "^").replace("\"", "^"));
 
     }
 
@@ -123,5 +124,67 @@ public class IOTools {
 //        }
 //        return sb.toString();
         return src.replace("\"", "\"\"");
+    }
+
+
+    //    Object obj = inputStream.readObject();
+    //      CommandWithObject<Creature> commandWithObject = (CommandWithObject<Creature>) obj;
+    public static StringWrapper getDeserializedStringWrapper(byte[] _bytes) throws IOException, ClassNotFoundException {
+        StringWrapper obj = null;
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(_bytes);
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
+            obj = (StringWrapper) ois.readObject();
+        } catch (StreamCorruptedException e) {
+            System.out.println(e.getMessage());
+        }
+        return obj;
+    }
+
+    public static byte[] getSerializedObj(String _string, Class clazz) throws IOException {
+        //если слишком большой обработай на сервере лишь строку
+        CommandWithObject<Creature> commandWrapper = new CommandWithObject<Creature>(_string, clazz);
+        byte[] obj = null;
+        try (ByteArrayOutputStream serializeBuf = new ByteArrayOutputStream(7331);
+             ObjectOutputStream serializingStream = new ObjectOutputStream(serializeBuf);) {
+            serializingStream.writeObject(commandWrapper);
+            serializeBuf.flush();
+            obj = serializeBuf.toByteArray();
+        }
+        return obj;
+    }
+
+    public static List<byte[]> getSerializedStringWrapper(String _string) throws IOException {
+        List<byte[]> list = new ArrayList<>();
+        try (ByteArrayOutputStream serializeBuf = new ByteArrayOutputStream(10);
+             ObjectOutputStream serializingStream = new ObjectOutputStream(serializeBuf);) {
+
+            List<String> strWrp= IOTools.getStringChunks(_string);
+            for (int i=0;i<strWrp.size();i++){
+                serializingStream.writeObject(new StringWrapper(strWrp.get(i), i, strWrp.size()));
+                serializingStream.flush();
+                list.add(serializeBuf.toByteArray());
+                serializeBuf.reset();
+            }
+        }
+        return list;
+    }
+
+    public static List<String> getStringChunks(String _string) {
+        List<String> list = new ArrayList<>();
+        int lastIndex = 0;
+        for (int i = 0; i < (int) _string.length() / 20; i++) {
+            list.add(_string.substring(20 * i, 20 * (i + 1)));
+            lastIndex += 20;
+        }
+        if (((double) _string.length() / 20) - ((int) _string.length() / 20) != 0) {
+            list.add(_string.substring(lastIndex));
+        }
+        return list;
+    }
+
+    public static <T> T readObjectFromStream(InputStream inputStream) throws IOException, ClassNotFoundException {
+        ObjectInputStream ois = new ObjectInputStream(inputStream);
+        T obj = (T) ois.readObject();
+        return obj;
     }
 }

@@ -1,11 +1,15 @@
 package capt.sunny.labs.l6.serv;
 
 
+import capt.sunny.labs.l6.Creature;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.security.InvalidParameterException;
 
+/**
+ * @version 1.0
+ */
 public class Command {
     private static String saveHelpInfo = "\nsave;\n\tсохранить коллекцию в файл\n";
     private static String exitHelpInfo = "\nexit;\n\tвыход с сохранением\n";
@@ -60,7 +64,8 @@ public class Command {
 
     //private static String multilineHelpInfo = "\nmultiline\n\tвыключить(если включен)/включить(если выключен) многострочный ввод\n";
     private static String envHelpInfo = "\nenvironment variable:\n\tYou set charset before start programm. \n\tIn the console: set CHARSET5=smth_charset\n\n\tTo set the file path: set FILE_FOR_5LAB=path/to/file.csv\n";
-    private static String help = infoHelpInfo + showHelpInfo + saveHelpInfo + envHelpInfo + helpHelpInfo + exitHelpInfo +  insertHelpInfo + add_if_minHelpInfo + remove_lowerHelpInfo + removeHelpInfo; //multilineHelpInfo
+    private static String loadHelpInfo = "\nload {\"fileName\":\"path/to/file\"};\n\tSet file with data\n";
+    private static String help = infoHelpInfo + loadHelpInfo + showHelpInfo + saveHelpInfo + envHelpInfo + helpHelpInfo + exitHelpInfo +  insertHelpInfo + add_if_minHelpInfo + remove_lowerHelpInfo + removeHelpInfo; //multilineHelpInfo
 
     public String getName() {
         return name;
@@ -113,9 +118,9 @@ public class Command {
     public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException {
         JSONObject parsedFirstParameter;
         JSONObject parsedSecondParameter;
-
-        if (creatureMap == null)
-            throw new InvalidParameterException("Collection not loaded. To load, use the load or import.\n");
+        System.out.println(name);
+        if (creatureMap == null && ! name.equals("load"))
+            throw new InvalidParameterException("Collection not loaded. To load, use the load or import:\n" + loadHelpInfo);
 
         try {
             parsedFirstParameter = firstParameter == null ? null : new JSONObject(firstParameter);
@@ -135,6 +140,8 @@ public class Command {
         }
 
         switch (name) {
+            case "load":
+                return new JSONObject(firstParameter).getString("fileName");
             case "insert":
                 try {
                     creatureMap.insert(parsedFirstParameter.getString("key"), new Creature(parsedSecondParameter.getJSONObject("element")));

@@ -1,21 +1,18 @@
 package capt.sunny.labs.l6.client;
 
+import capt.sunny.labs.l6.Command;
+import capt.sunny.labs.l6.CommandUtils;
 import capt.sunny.labs.l6.IOTools;
-import capt.sunny.labs.l6.StringWrapper;
-import com.sun.jmx.remote.internal.ArrayQueue;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
+import java.security.InvalidParameterException;
 
-public class NioMain {
-    static final String HOST = "localhost";
-    static final int PORT = 1339;
+public class NioMain implements Runnable{
+    static String HOST = "localhost";
+    static int PORT = 1340;
     static Class clazz;
 
     static {
@@ -27,11 +24,10 @@ public class NioMain {
     }
 
 
-    public static void main(String[] args) throws Exception {
+    @Override
+    public void run() {
         int attNum = 1;
         final boolean[] closeApp = {false};
-        ArrayQueue<String> messages = new ArrayQueue<>(500);
-        ArrayQueue<Exception> exceptions = new ArrayQueue<>(500);
 
         Thread ctrlC = new Thread(() -> {
             //saving before exit
@@ -40,41 +36,35 @@ public class NioMain {
         });
         ctrlC.setDaemon(true);
         Runtime.getRuntime().addShutdownHook(ctrlC);
-//1048576
 
-
-        try (
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));) {
-
-
-            System.out.print("Sign of the end of the command - ';'\n\n>>> ");
-            //new ObjectInputStream(channel.socket().getInputStream());
-
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, "UTF-8"))) {
+            System.out.print("Sign of the end of the command - ';'\n\n");
+            String message = "";
             while (true) {
-                try (SocketChannel channel = SocketChannel.open()) {
 
-                    channel.connect(new InetSocketAddress(HOST, PORT));
-                    channel.finishConnect();
-                    channel.configureBlocking(true);
-                    ObjectInputStream ois = new ObjectInputStream(Channels.newInputStream(channel));
+                try (SocketChannel channel = getChannel(new InetSocketAddress(HOST, PORT));
+                     ObjectInputStream ois = new ObjectInputStream(Channels.newInputStream(channel))) {
+
+                    attNum = 1;
 
                     for (; ; ) {
-                        String multilineCommand = IOTools.getMultiline(bufferedReader);
-                        channel.write(ByteBuffer.wrap(IOTools.getSerializedObj(multilineCommand, clazz)));
-                        Thread.sleep(500);
-
-                        StringWrapper chunk = null;
-                        do {
-                            chunk = (StringWrapper) ois.readObject();
-                            System.out.print(chunk.chunk);
-                        } while (!chunk.isLast());
-
-                        Thread.sleep(100);
                         System.out.print(">>> ");
+
+                        Command command = IOTools.readCommand(bufferedReader);
+                        IOTools.<Command>sendObject(channel, command, Command.class.getName());
+                        Object obj = IOTools.readObject(ois, true);
+                        printResp(obj);
+                        checkHook(closeApp[0], channel);
                     }
-                } catch (IOException e) {
+                } catch (ServerRespException e) {
+                    message = "\nWrong server response: " + e.getMessage();
+                }
+                catch (InvalidParameterException e) {
+                    message = "\nInvalid command: " + e.getMessage();
+                }
+                catch (IOException e) {
                     if (attNum < 8) {
-                        System.out.printf("No server connection. Trying to connect: committed %d/8 attempts.\n", attNum);
+                        System.out.printf("\nNo server connection. Trying to connect: committed %d/8 attempts.\n", attNum);
                         attNum++;
                         try {
                             System.out.println("Connecting...");
@@ -82,11 +72,18 @@ public class NioMain {
                         } catch (InterruptedException ex) {
                         }
                     } else {
-                        System.out.println("No server connection. The available number of attempts has been exhausted.");
-                        Runtime.getRuntime().removeShutdownHook(ctrlC);
-                        System.exit(-1);
+                        message = "\nNo server connection. The available number of attempts has been exhausted.\n";
+                        break;
                     }
-                }// catch (UnknownHostException e) {
+                } catch (ClientExitException e) {
+                    message = e.getMessage();
+                    break;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                // catch (UnknownHostException e) {
 //                    System.out.println("Faild connenction: unknown host");
 //                    exit(ctrlC);
 //                } catch (IOException e) {
@@ -99,11 +96,45 @@ public class NioMain {
 //                    System.out.print(e.getMessage());
 //                    exit(ctrlC);
 //                }
+                System.out.println(message);
             }
 
-
-            //System.exit(-1);
+            System.out.println(message);
+            Runtime.getRuntime().removeShutdownHook(ctrlC);
+            System.exit(-1);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    private static SocketChannel getChannel(InetSocketAddress inetSocketAddress) throws IOException {
+        SocketChannel channel = SocketChannel.open();
+        channel.connect(inetSocketAddress);
+        channel.finishConnect();
+        channel.configureBlocking(true);
+        return channel;
+    }
+
+    private static void printResp(Object obj) throws ServerRespException {
+        if (!(obj instanceof String)) {
+            throw new ServerRespException("server sent an unknown type object \n");
+        } else {
+            System.out.println("\n\n" + obj);
+        }
+    }
+
+    private static void checkHook(boolean needClose, SocketChannel channel) throws InterruptedException, ClientExitException, IOException {
+        Thread.sleep(100);
+        if (needClose) {
+            IOTools.sendObject(channel, CommandUtils.getCommand("save;"), Command.class.getName());
+            throw new ClientExitException("The collection has been saved");
+        }
+    }
+
+    public static void main(String[] args) {
+        new NioMain().run();
     }
 
 
@@ -116,11 +147,11 @@ public class NioMain {
 //        return chunk;
 //    }
 
-    private static void exit(Thread otherThread) {
-        //Runtime.getRuntime().removeShutdownHook(otherThread);
-
-        System.exit(-1);
-    }
+//    private static void exit(Thread otherThread) {
+//        //Runtime.getRuntime().removeShutdownHook(otherThread);
+//
+//        System.exit(-1);
+//    }
 
 
     //  private void run() throws Exception {
@@ -236,4 +267,12 @@ public class NioMain {
 //        }
 }
 
+
+/*
+    user->client +
+    client->serv +
+    serv<-client +
+serv->client
+    client<-serv +
+ */
 

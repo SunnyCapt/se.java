@@ -11,8 +11,8 @@ import java.util.concurrent.Executors;
 
 public class Main {
 
-    static int servPort = 1339;
-    static ExecutorService executeIt = Executors.newFixedThreadPool(4);
+    static int servPort = 1340;
+    static ExecutorService executeIt = Executors.newFixedThreadPool(10);
 
     public static void main(String[] args) {
         String messFromAdmin;

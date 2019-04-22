@@ -24,7 +24,6 @@ public class CreatureMap {
     }
 
     public CreatureMap(List<String[]> lines) throws InvalidParameterException {
-
         for (String[] line : lines) {
             map.put(line[0], new Creature(line));
         }
@@ -40,6 +39,7 @@ public class CreatureMap {
                 return a.getValue().getAge() - b.getValue().getAge();
             }
         });
+
         sortedKeys.clear();
         list.forEach((entry) -> {
             sortedKeys.add(entry.getKey());

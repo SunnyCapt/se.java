@@ -21,7 +21,7 @@ interface CreatureInt extends LocationInt {
     void say(String _str);
 }
 
-public class Creature implements CreatureInt {
+public class Creature implements CreatureInt, Comparable {
     private static double version = 1.0;
     protected String type;
     protected boolean isLive;
@@ -166,13 +166,13 @@ public class Creature implements CreatureInt {
         size *= 8;
     }
 
-    public int compareTo(Creature otherCreature) {
-        if (this.hashCode() == otherCreature.hashCode()) {
-            return 0;
-        } else {
-            return (this.size < otherCreature.size ? -1 : 1);
-        }
-    }
+//    public int compareTo(Creature otherCreature) {
+//        if (this.hashCode() == otherCreature.hashCode()) {
+//            return 0;
+//        } else {
+//            return (this.size < otherCreature.size ? -1 : 1);
+//        }
+//    }
 
     @Override
     public void say(String _str) {
@@ -232,5 +232,12 @@ public class Creature implements CreatureInt {
         return true;
     }
 
+    @Override
+    public int compareTo(Object o) {
+        if (! (o instanceof Creature) || o == null)
+            return -1;
+        else
+            return this.getAge() - ((Creature)o).getAge();
+    }
 }
 

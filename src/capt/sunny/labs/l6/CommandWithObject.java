@@ -46,7 +46,7 @@ public class CommandWithObject<T> implements Serializable {
                         .newInstance(new JSONObject(getCommand(_command)[1]).getJSONObject("element"));
         } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException
                 |InvocationTargetException | InstantiationException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
 

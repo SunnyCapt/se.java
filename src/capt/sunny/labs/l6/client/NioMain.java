@@ -12,14 +12,14 @@ import java.security.InvalidParameterException;
 
 public class NioMain implements Runnable{
     static String HOST = "localhost";
-    static int PORT = 1340;
+    static int PORT = 1337;
     static Class clazz;
 
     static {
         try {
             clazz = Class.forName("capt.sunny.labs.l6.Creature");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("class not found: " + e.getMessage());
         }
     }
 
@@ -78,35 +78,24 @@ public class NioMain implements Runnable{
                 } catch (ClientExitException e) {
                     message = e.getMessage();
                     break;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException | ClassNotFoundException e) {
+                    message = e.getMessage();
+                } catch (IllegalArgumentException e) {
+                    message = "Faild connenction: wrong port value";
+                    break;
                 }
-                // catch (UnknownHostException e) {
-//                    System.out.println("Faild connenction: unknown host");
-//                    exit(ctrlC);
-//                } catch (IOException e) {
-//                    System.out.print("Failed to read(write) input(output) stream: " + e.getMessage());
-//                    exit(ctrlC);
-//                } catch (IllegalArgumentException e) {
-//                    System.out.println("Faild connenction: wrong port value");
-//                    exit(ctrlC);
-//                } catch (InterruptedException e) {
-//                    System.out.print(e.getMessage());
-//                    exit(ctrlC);
-//                }
                 System.out.println(message);
             }
 
             System.out.println(message);
             Runtime.getRuntime().removeShutdownHook(ctrlC);
             System.exit(-1);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
+
     }
 
     private static SocketChannel getChannel(InetSocketAddress inetSocketAddress) throws IOException {
@@ -128,7 +117,7 @@ public class NioMain implements Runnable{
     private static void checkHook(boolean needClose, SocketChannel channel) throws InterruptedException, ClientExitException, IOException {
         Thread.sleep(100);
         if (needClose) {
-            IOTools.sendObject(channel, CommandUtils.getCommand("save;"), Command.class.getName());
+            IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save;"), Command.class.getName());
             throw new ClientExitException("The collection has been saved");
         }
     }

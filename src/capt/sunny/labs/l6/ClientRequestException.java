@@ -1,4 +1,4 @@
-package capt.sunny.labs.l6.serv;
+package capt.sunny.labs.l6;
 
 import java.security.InvalidParameterException;
 

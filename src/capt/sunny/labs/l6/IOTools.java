@@ -1,7 +1,7 @@
 package capt.sunny.labs.l6;
 
-import capt.sunny.labs.l6.serv.ClientRequestException;
-import capt.sunny.labs.l6.serv.CreatureMap;
+import capt.sunny.labs.l6.ClientRequestException;
+import capt.sunny.labs.l6.CreatureMap;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -51,6 +51,10 @@ public class IOTools {
 
     }
 
+    public static List<String[]> readFile(String fileName) throws IOException{
+        InputStreamReader reader = new InputStreamReader(new FileInputStream(fileName));
+        return readFile(reader, fileName);
+    }
     public static List<String[]> readFile(InputStreamReader reader, String fileName) throws IOException {
         List<String[]> fileLines = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -146,7 +150,7 @@ public class IOTools {
     public static <T> byte[] getSerializedObj(T _obj) throws IOException {
         //если слишком большой обработай на сервере лишь строку
         byte[] obj = null;
-        try (ByteArrayOutputStream serializeBuf = new ByteArrayOutputStream(7331);
+        try (ByteArrayOutputStream serializeBuf = new ByteArrayOutputStream(1000);
              ObjectOutputStream serializingStream = new ObjectOutputStream(serializeBuf);) {
             serializingStream.writeObject(_obj);
             serializeBuf.flush();

@@ -1,33 +1,34 @@
 package capt.sunny.labs.l6;
 
 
-import capt.sunny.labs.l6.serv.CreatureMap;
+import capt.sunny.labs.l6.CreatureMap;
 import capt.sunny.labs.l6.serv.FileSavingException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidParameterException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @version 1.0
  */
 
-class SerializableJSONObject extends JSONObject implements Serializable {
-    public SerializableJSONObject(String str) {
-        super(str);
-    }
-}
+
 
 public class Command implements Serializable {
 
     public String name;
     protected String firstParameter;
     protected String secondParameter;
-    String stringParameter = null;
-    Creature object = null;
+    protected String stringParameter = null;
+    protected Creature object = null;
+    protected List<String[]> srcFile;
 
-    public Command(String _name, String _firstParameters, String _secondParameter) {
+    public Command(String _name, String _firstParameters, String _secondParameter) throws IOException {
         name = _name;
         firstParameter = _firstParameters;
         secondParameter = _secondParameter;
@@ -45,21 +46,31 @@ public class Command implements Serializable {
     public Creature getObject() {
         return object;
     }
+    public List<String[]> getObjectMap() {
+        return srcFile;
+    }
 
-
+    public void deleteEmpty(){
+        srcFile.forEach(e->{if(Arrays.asList(e).size()==1 && Arrays.asList(e).get(0)=="")srcFile.remove(e);});
+    }
 //    @Override
 //    public String toString(){
 //        return String.format("Command: %s\nFirstParameter: %s\nSecondParameter: %s\n",this.name,this.firstParameter.toString(), this.secondParameter.toString());
 //    }
 
-    protected void parse() {
+    protected void parse() throws IOException {
 
         if (firstParameter != null) {
             JSONObject tempObj = new JSONObject(firstParameter);
             if (tempObj.has("key")) {
                 stringParameter = tempObj.getString("key");
             } else if (tempObj.has("fileName")) {
-                stringParameter = tempObj.getString("fileName");
+                if (name.equals("load"))
+                    stringParameter = tempObj.getString("fileName");
+                else if (name.equals("import")) {
+                    srcFile = IOTools.readFile(tempObj.getString("fileName"));
+                    this.deleteEmpty();
+                }
             } else if (tempObj.has("element")) {
                 firstParameter = firstParameter.replaceAll("([0-9]+)([0-9]+)\\:([0-9]+)([0-9]+)\\:([0-9]+)([0-9]+)", "$1$2^$3$4^$5$6");
                 tempObj = new JSONObject(firstParameter);
@@ -76,15 +87,20 @@ public class Command implements Serializable {
         }
     }
 
-    public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException {
+    public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException, capt.sunny.labs.l6.FileSavingException {
 
         System.out.println(name);
-        if (creatureMap == null && !name.equals("load"))
+        if (((creatureMap == null) && (!name.equals("load")))&&((creatureMap == null) && (!name.equals("import"))))
             throw new InvalidParameterException("Collection not loaded. To load, use the load or import:\n" + CommandUtils.loadHelpInfo);
 
         switch (name) {
             case "load":
                 return stringParameter;
+            case "import":
+                if (creatureMap != null)
+                    return "collection imported\n";
+                else
+                    return "collection didnt import\n";
             case "insert":
                 try {
                     creatureMap.insert(stringParameter, object);
@@ -102,7 +118,7 @@ public class Command implements Serializable {
                 try {
                     creatureMap.save(fileName, charsetName);
                     return "\nFile saved\n";
-                } catch (FileSavingException e) {
+                } catch (capt.sunny.labs.l6.FileSavingException e) {
                     throw e;
                 }
             case "add_if_min":

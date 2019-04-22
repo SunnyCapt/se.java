@@ -1,15 +1,11 @@
 package capt.sunny.labs;
 
-import capt.sunny.labs.l6.Command;
 import capt.sunny.labs.l6.IOTools;
-import capt.sunny.labs.l6.Wrapper;
-import capt.sunny.labs.l6.WrapperUtils;
 import capt.sunny.labs.l6.client.NioMain;
+import capt.sunny.labs.l6.CreatureMap;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
 
 //import capt.sunny.labs.l6.StringWrapper;
 
@@ -56,7 +52,13 @@ public class Main {
 //        System.out.println();
 //        System.out.println("str");
 //        System.out.println(Arrays.toString(str));
-        new NioMain().run();
+        //new NioMain().run();
+        CreatureMap cmap = IOTools.getCreatureMapFromFile("data/data.csv", "UTF-8");
+        byte[] a = IOTools.getSerializedObj(cmap);
+        System.out.println(Arrays.toString(a));
+//        System.out.println(cmap.map.entrySet().stream()
+//                .min().get().getValue());
+            new NioMain().run();
     }
 }
 /*

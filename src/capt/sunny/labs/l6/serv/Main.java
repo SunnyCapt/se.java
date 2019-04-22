@@ -3,22 +3,43 @@ package capt.sunny.labs.l6.serv;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.NoSuchElementException;
 
 public class Main {
-
+    public static final String DATA_DIR = "/home/s278068/trash/lab/data";
     static int servPort = 1340;
-    static ExecutorService executeIt = Executors.newFixedThreadPool(10);
+    //static ExecutorService executeIt = Executors.newFixedThreadPool(2);
 
     public static void main(String[] args) {
         String messFromAdmin;
-        try (ServerSocket server = new ServerSocket(servPort);
-             BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.printf("Server is running on port %d\n", servPort);
+        ServerSocket server;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+
+            System.out.println("Enter ip and port: 127.0.0.10:1337");
+            while (true) {
+                try {
+                    String hostPort = br.readLine();
+                    hostPort = hostPort.trim();
+                    if (!"exit".equals(hostPort)) {
+                        String[] data = hostPort.split(":");
+                        if (data.length == 2) {
+                            String ip = data[0].trim();
+                            int port = Integer.valueOf(data[1].trim());
+                            server = new ServerSocket(port, 1000, Inet4Address.getByName(ip));
+                            break;
+                        } else System.out.println("Неверные данные");
+                    } else System.exit(0);
+                } catch (NullPointerException | StringIndexOutOfBoundsException | IllegalArgumentException | IOException e) {
+                    System.out.println("Неверно введены данные или нет допуска в сеть");
+                } catch (NoSuchElementException e) {
+                    System.out.println("Вы вышли из системы айайайайа");
+                    System.exit(0);
+                }
+            }
+            System.out.printf("Server is running on port %d\n", server.getLocalPort());
             while (!server.isClosed()) {
                 if (br.ready()) {
                     messFromAdmin = br.readLine();
@@ -26,11 +47,17 @@ public class Main {
                 }
 
                 Socket client = server.accept();
-                executeIt.execute(new MSocket(client));
+                new Thread(new MSocket(client)).start();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("IOException: " + e.getMessage());
+        } catch (Exception e){
+            System.out.println("Unknow exception: " + e.getMessage());
         }
+
+
     }
 
 }
+
+

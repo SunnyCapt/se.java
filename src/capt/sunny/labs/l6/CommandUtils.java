@@ -1,5 +1,7 @@
 package capt.sunny.labs.l6;
 
+import java.io.IOException;
+
 public class CommandUtils{
     public final  static String saveHelpInfo = "\nsave;\n\tсохранить коллекцию в файл\n";
     public final  static String exitHelpInfo = "\nexit;\n\tвыход с сохранением\n";
@@ -57,7 +59,7 @@ public class CommandUtils{
     public final static String loadHelpInfo = "\nload {\"fileName\":\"path/to/file\"};\n\tSet file with data\n";
     public final static String help = infoHelpInfo + loadHelpInfo + showHelpInfo + saveHelpInfo + envHelpInfo + helpHelpInfo + exitHelpInfo +  insertHelpInfo + add_if_minHelpInfo + remove_lowerHelpInfo + removeHelpInfo; //multilineHelpInfo
 
-    public static Command getCommand(String commandLine) {
+    public static Command getCommand(String commandLine) throws IOException {
         int indexOfSecondParameter = -1;
         int indexOfFirstParameter = -1;
         boolean i = true;

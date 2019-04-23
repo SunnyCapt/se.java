@@ -210,9 +210,9 @@ public class IOTools {
 
         String progressPatt = "";
         if (needStatusBar) {
-            if (chunk.totalChunkNumber < 200) {
-                for (int i = 0; i < 200 / chunk.totalChunkNumber; i++)
-                    progressPatt += "▍";
+            if (chunk.totalChunkNumber < 100) {
+                    for (int i = 0; i < 100 / chunk.totalChunkNumber; i++)
+                    progressPatt += "#";
             }
             System.out.println("\nLoading...");
             System.out.print(progressPatt);
@@ -237,9 +237,9 @@ public class IOTools {
         List<Wrapper> wrappedSerializedCommand = WrapperUtils.wrapUp(IOTools.<T>getSerializedObj(obj), _className);
 
         String progressPatt = "";
-        if (wrappedSerializedCommand.size() < 200) {
-            for (int i = 0; i < 200 / wrappedSerializedCommand.size(); i++)
-                progressPatt += "▍";
+        if (wrappedSerializedCommand.size() < 100) {
+            for (int i = 0; i < 100 / wrappedSerializedCommand.size(); i++)
+                progressPatt += "#";
         }
         System.out.println("\nSending...");
 
@@ -260,9 +260,9 @@ public class IOTools {
 
         String progressPatt = "";
         if (needStatusBar) {
-            if (wrappedSerializedCommand.size() < 200) {
-                for (int i = 0; i < 200 / wrappedSerializedCommand.size(); i++)
-                    progressPatt += "▍";
+            if (wrappedSerializedCommand.size() < 100) {
+                for (int i = 0; i < 100 / wrappedSerializedCommand.size(); i++)
+                    progressPatt += "#";
             }
             System.out.println("\nSending...");
             System.out.print(progressPatt);

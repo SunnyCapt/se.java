@@ -18,7 +18,7 @@ public class Main {
         ServerSocket server;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
 
-            System.out.println("Enter ip and port: 127.0.0.10:1337");
+            System.out.println("Enter host and port: 127.0.0.10:1337");
             while (true) {
                 try {
                     String hostPort = br.readLine();
@@ -30,14 +30,14 @@ public class Main {
                             int port = Integer.valueOf(data[1].trim());
                             server = new ServerSocket(port, 1000, Inet4Address.getByName(ip));
                             break;
-                        } else System.out.println("Неверные данные");
+                        } else System.out.println("Wrong\n");
                     } else System.exit(0);
                 } catch (NullPointerException | StringIndexOutOfBoundsException | IllegalArgumentException | IOException e) {
-                    System.out.println("Неверно введены данные или нет допуска в сеть");
+                    System.out.println("Invalid host:port entered or not admitted to the network");
                 } catch (NoSuchElementException e) {
-                    System.out.println("Вы вышли из системы айайайайа");
-                    System.exit(0);
+                    System.out.println("exit");
                 }
+                System.exit(0);
             }
             System.out.printf("Server is running on port %d\n", server.getLocalPort());
             while (!server.isClosed()) {

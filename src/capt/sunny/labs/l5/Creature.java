@@ -3,7 +3,7 @@ package capt.sunny.labs.l5;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
+
 import java.security.InvalidParameterException;
 
 interface LocationInt {
@@ -16,7 +16,7 @@ interface CreatureInt extends LocationInt {
     void say(String _str);
 }
 
-public class Creature implements CreatureInt, Serializable {
+public class Creature implements CreatureInt{
     protected String type;
     protected boolean isLive;
     protected int age;

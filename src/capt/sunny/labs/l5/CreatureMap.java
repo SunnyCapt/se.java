@@ -1,10 +1,13 @@
 package capt.sunny.labs.l5;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.security.InvalidParameterException;
 import java.util.*;
 
-public class CreatureMap implements Serializable {
+public class CreatureMap  {
     private Map<String, Creature> map = new HashMap<>();
     int lastHashCode;
     private Date createdDate = new Date();

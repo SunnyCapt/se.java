@@ -2,6 +2,7 @@ package capt.sunny.labs.l6;
 
 import capt.sunny.labs.l6.ClientRequestException;
 import capt.sunny.labs.l6.CreatureMap;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -160,6 +161,16 @@ public class IOTools {
         return obj;
     }
 
+    public static <K> K getDeserializedObject(byte[] _bytes) throws IOException, ClassNotFoundException {
+        K obj = null;
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(_bytes);
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
+            obj = (K) ois.readObject();
+        } catch (Exception e){
+            throw new ClientRequestException("I can not deserialize this object: "+e.getMessage());
+        }
+        return obj;
+    }
 //    public static List<byte[]> getSerializedStringWrapper(String _string) throws IOException {
 //        List<byte[]> list = new ArrayList<>();
 //        try (ByteArrayOutputStream serializeBuf = new ByteArrayOutputStream(10);
@@ -205,7 +216,7 @@ public class IOTools {
         List<Wrapper> chunks = new ArrayList<>();
         inputStream.read(buffer.array());
 
-        Wrapper chunk = WrapperUtils.<Wrapper>getDeserializedObject(buffer.array());
+        Wrapper chunk = IOTools.<Wrapper>getDeserializedObject(buffer.array());
         chunks.add(chunk);
 
         String progressPatt = "";
@@ -221,7 +232,7 @@ public class IOTools {
         while (!chunk.isLast()) {
             buffer.clear();
             inputStream.read(buffer.array());
-            chunk = WrapperUtils.<Wrapper>getDeserializedObject(buffer.array());
+            chunk = IOTools.<Wrapper>getDeserializedObject(buffer.array());
             chunks.add(chunk);
             Thread.sleep(100);
             if (needStatusBar)

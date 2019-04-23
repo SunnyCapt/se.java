@@ -9,8 +9,9 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 
 public class Main {
-    public static final String DATA_DIR = "/home/s278068/trash/lab/data";
-    static int servPort = 1340;
+    //Изменять в зависимоссти от оси на которой заупскают
+    public static final String DATA_DIR = "/home/s278068/trash/lab/data/";
+    //static int servPort = 1340;
     //static ExecutorService executeIt = Executors.newFixedThreadPool(2);
 
     public static void main(String[] args) {

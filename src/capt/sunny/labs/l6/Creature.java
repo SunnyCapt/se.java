@@ -5,6 +5,7 @@ import capt.sunny.labs.l6.serv.PointInt;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.security.InvalidParameterException;
 import java.util.Date;
 
@@ -21,7 +22,7 @@ interface CreatureInt extends LocationInt {
     void say(String _str);
 }
 
-public class Creature implements CreatureInt, Comparable {
+public class Creature implements CreatureInt, Comparable , Serializable {
     private static double version = 1.0;
     protected String type;
     protected boolean isLive;
@@ -61,6 +62,7 @@ public class Creature implements CreatureInt, Comparable {
 
     public Creature(JSONObject jsonObject) {
         try {
+            jsonObject = jsonObject.getJSONObject("element");
             try {
                 creationDate = new Date(jsonObject.get("creationDate").toString());
             } catch (JSONException e) {
@@ -81,7 +83,6 @@ public class Creature implements CreatureInt, Comparable {
         }
     }
 
-    //date.toGMTString()
 
     public Creature(String[] line) {
         if (line.length != 10 && line.length != 9) {

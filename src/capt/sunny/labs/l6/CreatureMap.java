@@ -133,7 +133,7 @@ public class CreatureMap implements Serializable {
 
     private String toCSV() {
         StringBuilder sb = new StringBuilder();
-        map.entrySet().stream().sorted(comparator).map(e -> sb.append(String.format("\"%s\",%s", getCSVQuotes(e.getKey()), e.getValue().toCSVLine())));
+        map.entrySet().stream().sorted(comparator).forEach(e -> sb.append(String.format("\"%s\",%s", getCSVQuotes(e.getKey()), e.getValue().toCSVLine())));
         return sb.toString();
     }
 

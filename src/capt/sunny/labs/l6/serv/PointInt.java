@@ -1,7 +1,9 @@
 package capt.sunny.labs.l6.serv;
 
 
-public interface PointInt extends Updateable {
+import java.io.Serializable;
+
+public interface PointInt extends Updateable, Serializable {
     double[] get();
 
     String toString();

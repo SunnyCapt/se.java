@@ -1,18 +1,14 @@
 package capt.sunny.labs.l6.serv;
 
 import capt.sunny.labs.l6.Command;
-import capt.sunny.labs.l6.Creature;
 import capt.sunny.labs.l6.CreatureMap;
 import capt.sunny.labs.l6.IOTools;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.InvalidParameterException;
-import java.util.Map;
+import java.util.Date;
 
 //import capt.sunny.labs.l6.StringWrapper;
 
@@ -22,9 +18,7 @@ import java.util.Map;
  */
 public class MSocket implements Runnable {
 
-    Socket client;
-    String fileName;
-    String charsetName = "UTF-8";
+    private Socket client;
 
     /**
      * @param _client - Socket obj which you can get by <code>serverSocket.accept();</code>
@@ -37,45 +31,43 @@ public class MSocket implements Runnable {
     public void run() {
         System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
         //setClientConfig();
-        fileName = client.toString();
+        String fileName = String.format("%s/file_created_by%s_[time:%s].csv", Main.DATA_DIR, client.toString().replaceAll("/","l"), new Date().getTime());
         String message = "";
+        Command command = null;
         CreatureMap creatureMap = null;
         try (ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
              InputStream inputStream = client.getInputStream();) {
 
             while (!client.isClosed()) {
-                try {
-                    Command command = IOTools.readCommand(inputStream);
-                    System.out.printf("[New request from: %s:%d]{\n%s}\n", client.getInetAddress().getHostAddress(), client.getPort(), command.toString());
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))){
+                    //disconnect after 600 seconds of waiting
+                    command = IOTools.readCommand(inputStream);
+                    System.out.printf("\n[New request from: %s:%d]{%s}\n", client.getInetAddress().getHostAddress(), client.getPort(), command.toString());
 
-                    if (command.name.equals("import")) {
-                        System.out.println(command.getObjectMap());
+                    if (command.getName().equals("import")) {
                         command.deleteEmpty();
                         creatureMap = new CreatureMap(command.getObjectMap());
                     }
-                    System.out.println("point1");
                     message = command.executeCommand(creatureMap, fileName, "UTF-8");
+
                     //message = command.executeCommand(creatureMap, fileName, charsetName);
-                    System.out.println("point2");
-                    if (command.name.equals("load")) {
-                        if (message.startsWith(Main.DATA_DIR) || true) {
+                    if (command.getName().equals("load")) {
+                        if (message.startsWith(Main.DATA_DIR) || message.startsWith("~") || message.equals("data/data.csv") ) {
                             fileName = message;
                             creatureMap = IOTools.getCreatureMapFromFile(fileName, "UTF-8");
                             message = "File loaded";
-                        }else{
-                            message = "File didnt load: FORBIDDEN, path to file on server must starts with "+Main.DATA_DIR+"\n";
+                        } else {
+                            message = "File didnt load: FORBIDDEN, path to file on server must starts with " + Main.DATA_DIR + "\n";
                         }
                     }
-
-                } catch (EOFException e) {
-                    System.out.printf("Connection with %s:%d broke: %s\n", client.getInetAddress().getHostAddress(), client.getPort(), e.getMessage());
-                    break;
+//                    command = CommandUtils.getCommand(IOTools.getMultiline(br));
+//                    command.executeCommand(creatureMap, fileName, "UTF-8");
                 } catch (InvalidParameterException e) {
                     message = "Invalid: " + e.getMessage();
                     ////////////////////////////////
                 } catch (FileSavingException e) {
                     message = e.getMessage();
-                } catch (SocketException e) {
+                } catch ( SocketException e) {
                     System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
                     break;
                 } catch (IOException e) {
@@ -93,41 +85,21 @@ public class MSocket implements Runnable {
                 }
 
 
+                if (command != null && command.getName().equals("exit"))
+                    break;
+
             }
-            client.close();
+            throw new IOException();
         } catch (InterruptedException | IOException e) {
             System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
             try {
                 client.close();
             } catch (IOException ex) {
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Unknow exception: " + e.getMessage());
         }
 
     }
-
-//    private Command readCommand(){
-//
-//    }
-
-//
-//    public void setClientConfig() {
-//        Map<String, String> env = System.getenv();
-//        fileName = env.get("FILE_FOR_5LAB");
-////        charsetName = env.get("CHARSET5");
-////        if (charsetName == null) {
-////            charsetName = "UTF-8";
-////        }
-//        if (fileName == null) {
-//            System.out.println("Set an environment variable named \"FILE_FOR_5LAB\"");
-//            System.exit(-1);
-//        }
-////        try {
-////            System.setOut(new PrintStream(System.out, true, charsetName));
-////        } catch (UnsupportedEncodingException e) {
-////            System.out.printf("Change CHARSET5 environment variable: UnsupportedEncodingException %s", charsetName);
-////        }
-//    }
 }
 

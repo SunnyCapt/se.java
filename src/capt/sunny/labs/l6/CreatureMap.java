@@ -15,22 +15,17 @@ import static capt.sunny.labs.l6.IOTools.getCSVQuotes;
 
 
 public class CreatureMap implements Serializable {
-    public Map<String, Creature> map = new ConcurrentHashMap<>();
-    int lastHashCode;
+    private Map<String, Creature> map = new ConcurrentHashMap<>();
+    private int lastHashCode;
     private Date creationDate = new Date();
-    private Comparator<Map.Entry<String, Creature>> comparator = new Comparator<Map.Entry<String, Creature>>() {
-        @Override
-        public int compare(Map.Entry<String, Creature> a, Map.Entry<String, Creature> b) {
-            return a.getValue().getAge() - b.getValue().getAge();
-        }
-    };
+    private Comparator<Map.Entry<String, Creature>> comparator = Comparator.comparingInt(a -> a.getValue().getAge());
 
     public CreatureMap() {
         lastHashCode = 0;
     }
 
     public CreatureMap(List<String[]> lines) throws InvalidParameterException {
-        lines.remove(lines.get(lines.size()-1));
+        lines.remove(lines.get(lines.size()-1));//??????
         lines.forEach(e -> map.put(e[0], new Creature(e)));
         lastHashCode = hashCode();
     }
@@ -41,7 +36,7 @@ public class CreatureMap implements Serializable {
      * @param key     String ключ нового элемента
      * @param element Creature
      */
-    public void insert(String key, Creature element) {
+    void insert(String key, Creature element) {
         map.put(key, element);
         //sortKeys();
     }
@@ -51,9 +46,9 @@ public class CreatureMap implements Serializable {
      * В случае, если коллекция пустая, возвращается строка:
      * "Colection is empty"
      */
-    public String show() {
+    String show() {
         String result = this.toString();
-        return "\n\n" + (result.equals("") ? "Colection is empty\n" : result);
+        return "\n" + (result.equals("") ? "Colection is empty\n" : result);
     }
 
     /**
@@ -63,9 +58,9 @@ public class CreatureMap implements Serializable {
      * @param charsetName String кодировка
      * @throws FileSavingException выбрасывается в случае, если не удается сохранить файл
      */
-    public void save(String fileName, String charsetName) throws FileSavingException {
+    void save(String fileName, String charsetName) throws FileSavingException {
         if (isEdited()) {
-            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(fileName), charsetName);) {
+            try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(fileName), charsetName)) {
                 writer.write(toCSV());
                 writer.flush();
                 lastHashCode = hashCode();
@@ -85,8 +80,8 @@ public class CreatureMap implements Serializable {
      *
      * @param element Creature рассматрвиаемый элемент
      */
-    @SuppressWarnings("unchecked")
-    public void add_if_min(Creature element) {
+
+    void add_if_min(Creature element) {
         if (map.isEmpty()) {
             map.put(String.valueOf(element.hashCode()), element);
         } else {
@@ -104,7 +99,7 @@ public class CreatureMap implements Serializable {
      *
      * @param key String ключ удаляемого элемента
      */
-    public void remove(String key) {
+    void remove(String key) {
         if (map.keySet().contains(key)) {
             map.remove(key);
         } else {
@@ -117,7 +112,7 @@ public class CreatureMap implements Serializable {
      *
      * @return inforamtion String результат
      */
-    public String info() {
+    String info() {
         String information = String.format("\ntype: %s\nobjects number: %d\nCreation date: %s\n", map.getClass().getName(), map.size(), creationDate.toString());
         return information;
     }
@@ -127,7 +122,7 @@ public class CreatureMap implements Serializable {
      *
      * @param key String ключ для сравнений
      */
-    public void remove_lower(String key) {
+    void remove_lower(String key) {
         map.entrySet().stream().filter(e -> key.compareTo(e.getKey()) > 0).forEach(e -> remove(e.getKey()));
     }
 
@@ -138,7 +133,7 @@ public class CreatureMap implements Serializable {
     }
 
 
-    public boolean isEdited() {
+    private boolean isEdited() {
         return lastHashCode != hashCode();
     }
 

@@ -5,10 +5,8 @@ import capt.sunny.labs.l6.serv.FileSavingException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidParameterException;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -25,9 +23,9 @@ public class Command implements Serializable {
     protected Creature object = null;
     protected List<String[]> srcFile = null;
 
-    public Command(String _name, String _firstParameters, String _secondParameter) throws IOException {
+    public Command(String _name, String _firstParameters, String _secondParameter) throws InvalidParameterException {
         if (!Commands.check(_name))
-            throw new InvalidParameterException("unknown command");
+            throw new InvalidParameterException("\nUnknown command\n");
         name = _name;
         firstParameter = _firstParameters;
         secondParameter = _secondParameter;
@@ -50,46 +48,54 @@ public class Command implements Serializable {
         return srcFile;
     }
 
-    public void deleteEmpty() {
-        srcFile.forEach(e -> {
-            if (Arrays.asList(e).size() == 1 && Arrays.asList(e).get(0) == "") srcFile.remove(e);
-        });
-    }
+//    public void deleteEmpty() {
+//        srcFile.forEach(e -> {
+//            if (Arrays.asList(e).size() == 1 && Arrays.asList(e).get(0) == "") srcFile.remove(e);
+//        });
+//    }
 
     @Override
     public String toString() {
         return String.format("\nCommand: %s\nFirst Parameter: %s\nObject: %s\nCollection from file: %s\n", this.name, this.stringParameter, this.object, this.srcFile != null ? "some bytes" : null);
     }
 
+    @SuppressWarnings("ConstantConditions")
     protected void parse() {
-
-        if (firstParameter != null) {
-            JSONObject tempObj = new JSONObject(firstParameter);
-            if (tempObj.has("key")) {
-                stringParameter = tempObj.getString("key");
-            } else if (tempObj.has("fileName")) {
-                if (name.equals("load"))
-                    stringParameter = tempObj.getString("fileName");
-                else if (name.equals("import")) {
-                    try {
-                        srcFile = IOTools.readFile(tempObj.getString("fileName"));
-                        this.deleteEmpty();
-                    } catch (Exception e) {
-                        throw new InvalidParameterException("file could not be read\n");
+        String[] commandParameters = Commands.valueOf(this.name.toUpperCase()).getParameterNames();
+        if (commandParameters.length != (firstParameter == null ? 0 : 1) + (secondParameter == null ? 0 : 1)) {
+            throw new InvalidParameterException("\nWrong parameters for: " + name + "\n");
+        }
+        if (commandParameters.length >= 1) {
+            try {
+                JSONObject tempObj = new JSONObject(firstParameter);
+                if (tempObj.has("key") && commandParameters[0].equals("key")) {
+                    stringParameter = tempObj.getString("key");
+                } else if (tempObj.has("fileName") && commandParameters[0].equals("fileName")) {
+                    if (name.equals("load"))
+                        stringParameter = tempObj.getString("fileName");
+                    else if (name.equals("import")) {
+                        try {
+                            srcFile = IOTools.readFile(tempObj.getString("fileName"));
+                        } catch (Exception e) {
+                            throw new InvalidParameterException("file could not be read\n");
+                        }
+                    }
+                } else if (tempObj.has("element") && commandParameters[0].equals("element")) {
+                    tempObj = new JSONObject(firstParameter);
+                    object = new Creature(tempObj.getJSONObject("element"));
+                } else {
+                    throw new InvalidParameterException("\nWrong parameters for: " + name + "\n");
+                }
+                if (commandParameters.length == 2) {
+                    if (commandParameters[1].equals("element")) {
+                        tempObj = new JSONObject(secondParameter);
+                        object = new Creature(tempObj.getJSONObject("element"));
+                    } else {
+                        throw new InvalidParameterException("\nWrong parameters for: " + name + "\n");
                     }
                 }
-            } else if (tempObj.has("element")) {
-                firstParameter = firstParameter.replaceAll("([0-9]+)([0-9]+)\\:([0-9]+)([0-9]+)\\:([0-9]+)([0-9]+)", "$1$2^$3$4^$5$6");
-                tempObj = new JSONObject(firstParameter);
-                tempObj.getJSONObject("element").put("creationDate", tempObj.getJSONObject("element").get("creationDate").toString().replaceAll("([0-9]+)([0-9]+)\\^([0-9]+)([0-9]+)\\^([0-9]+)([0-9]+)", "$1$2:$3$4:$5$6"));
-                object = new Creature(tempObj);
-            }
-
-            if (secondParameter != null) {
-                //secondParameter = secondParameter.replaceAll("([0-9]+)([0-9]+)\\:([0-9]+)([0-9]+)\\:([0-9]+)([0-9]+)", "$1$2^$3$4^$5$6");
-                tempObj = new JSONObject(secondParameter);
-                //tempObj.getJSONObject("element").put("creationDate", tempObj.getJSONObject("element").get("creationDate").toString().replaceAll("([0-9]+)([0-9]+)\\^([0-9]+)([0-9]+)\\^([0-9]+)([0-9]+)", "$1$2:$3$4:$5$6"));
-                object = new Creature(tempObj);
+            } catch (JSONException e) {
+                throw new InvalidParameterException(e.getMessage());
             }
         }
     }
@@ -97,8 +103,8 @@ public class Command implements Serializable {
     public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException, capt.sunny.labs.l6.FileSavingException {
 
 
-        if (((creatureMap == null) && (!name.equals("load"))) && ((creatureMap == null) && (!name.equals("import"))))
-            throw new InvalidParameterException("Collection not loaded. To load, use the load or import:\n" + Commands.LOAD.man());
+//        if ((creatureMap == null) && (!name.equals("help")) && (!name.equals("load")) && (!name.equals("import")))
+//            throw new InvalidParameterException("Collection not loaded. To load, use the load or import:\n" + Commands.LOAD.man());
 
         switch (name) {
             case "load":

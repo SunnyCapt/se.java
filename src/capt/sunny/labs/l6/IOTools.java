@@ -1,9 +1,5 @@
 package capt.sunny.labs.l6;
 
-import capt.sunny.labs.l6.ClientRequestException;
-import capt.sunny.labs.l6.CreatureMap;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
-
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -52,10 +48,11 @@ public class IOTools {
 
     }
 
-    public static List<String[]> readFile(String fileName) throws IOException{
+    public static List<String[]> readFile(String fileName) throws IOException {
         InputStreamReader reader = new InputStreamReader(new FileInputStream(fileName));
         return readFile(reader, fileName);
     }
+
     public static List<String[]> readFile(InputStreamReader reader, String fileName) throws IOException {
         List<String[]> fileLines = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -111,8 +108,7 @@ public class IOTools {
                 creatureMap = new CreatureMap(fileLines);
             }
         } catch (FileNotFoundException e) {
-            System.out.println(String.format("Can't read \"%s\"", fileName));
-            System.exit(-1);
+            throw new InvalidParameterException(String.format("Can't read \"%s\"", fileName));
         } catch (IOException e) {
             System.out.println(e.getMessage());
             System.exit(-1);
@@ -166,98 +162,88 @@ public class IOTools {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(_bytes);
              ObjectInputStream ois = new ObjectInputStream(bais)) {
             obj = (K) ois.readObject();
-        } catch (Exception e){
-            throw new ClientRequestException("I can not deserialize this object: "+e.getMessage());
+        } catch (Error | Exception e) {
+            throw new RequestException("I can not deserialize this object: " + e.getMessage());
         }
         return obj;
     }
-//    public static List<byte[]> getSerializedStringWrapper(String _string) throws IOException {
-//        List<byte[]> list = new ArrayList<>();
-//        try (ByteArrayOutputStream serializeBuf = new ByteArrayOutputStream(10);
-//             ObjectOutputStream serializingStream = new ObjectOutputStream(serializeBuf);) {
-//
-//            List<String> strWrp = IOTools.getStringChunks(_string);
-//            for (int i = 0; i < strWrp.size(); i++) {
-//                //serializingStream.writeObject(new StringWrapper(strWrp.get(i), i, strWrp.size()));
-//                serializingStream.flush();
-//                list.add(serializeBuf.toByteArray());
-//                serializeBuf.reset();
-//            }
-//        }
-//        return list;
+
+//    public static <T> T readObjectFromStream(InputStream inputStream) throws IOException, ClassNotFoundException {
+//        ObjectInputStream ois = new ObjectInputStream(inputStream);
+//        T obj = (T) ois.readObject();
+//        return obj;
 //    }
 
-//    public static List<String> getStringChunks(String _string) {
-//        List<String> list = new ArrayList<>();
-//        int lastIndex = 0;
-//        for (int i = 0; i < (int) _string.length() / 20; i++) {
-//            list.add(_string.substring(20 * i, 20 * (i + 1)));
-//            lastIndex += 20;
-//        }
-//        if (((double) _string.length() / 20) - ((int) _string.length() / 20) != 0) {
-//            list.add(_string.substring(lastIndex));
-//        }
-//        return list;
-//    }
-
-    public static <T> T readObjectFromStream(InputStream inputStream) throws IOException, ClassNotFoundException {
-        ObjectInputStream ois = new ObjectInputStream(inputStream);
-        T obj = (T) ois.readObject();
-        return obj;
-    }
-
-    public static Object readObject(InputStream inputStream) throws IOException, ClassNotFoundException, InterruptedException{
+    public static Object readObject(InputStream inputStream) throws IOException, ClassNotFoundException, InterruptedException {
         return readObject(inputStream, false);
     }
 
-    public static Object readObject(InputStream inputStream, boolean needStatusBar) throws IOException, ClassNotFoundException, InterruptedException {
+
+    public static Object readObject(InputStream inputStream, boolean needProcessBar) throws IOException, ClassNotFoundException, InterruptedException {
         ByteBuffer buffer = ByteBuffer.allocate(WrapperUtils.SIZE_OF_CHUNK);
 
         List<Wrapper> chunks = new ArrayList<>();
         inputStream.read(buffer.array());
-
         Wrapper chunk = IOTools.<Wrapper>getDeserializedObject(buffer.array());
         chunks.add(chunk);
-
-        String progressPatt = "";
-        if (needStatusBar) {
+        int onePercentOfChunks = -1;
+        String progressPatt = "#";
+        if (needProcessBar) {
             if (chunk.totalChunkNumber < 100) {
-                    for (int i = 0; i < 100 / chunk.totalChunkNumber; i++)
+                for (int i = 0; i < 100 / chunk.totalChunkNumber; i++)
                     progressPatt += "#";
+            } else {
+                onePercentOfChunks = chunk.totalChunkNumber / 100;
             }
             System.out.println("\nLoading...");
             System.out.print(progressPatt);
         }
-
         while (!chunk.isLast()) {
             buffer.clear();
             inputStream.read(buffer.array());
+            if (buffer.array()[0]==0 && buffer.array()[1]==0 && buffer.array()[2]==0 && buffer.array()[3]==0)
+                break;
             chunk = IOTools.<Wrapper>getDeserializedObject(buffer.array());
             chunks.add(chunk);
-            Thread.sleep(100);
-            if (needStatusBar)
+            //Thread.sleep(100);
+            if (onePercentOfChunks == -1) {
                 System.out.print(progressPatt);
+            } else {
+                if (chunk.chunkNumber % onePercentOfChunks == 0)
+                    System.out.print(progressPatt);
+            }
+
         }
         System.out.println();
         Object obj = WrapperUtils.<Object>getDeserializedObject(chunks);
         return obj;
     }
 
+
     public static <T> void sendObject(SocketChannel channel, T obj, String _className) throws IOException, InterruptedException {
 
         List<Wrapper> wrappedSerializedCommand = WrapperUtils.wrapUp(IOTools.<T>getSerializedObj(obj), _className);
-
-        String progressPatt = "";
+        int onePercentOfChunks = -1;
+        String progressPatt = "#";
         if (wrappedSerializedCommand.size() < 100) {
             for (int i = 0; i < 100 / wrappedSerializedCommand.size(); i++)
                 progressPatt += "#";
+        } else {
+            onePercentOfChunks = (wrappedSerializedCommand.size() / 100) + (wrappedSerializedCommand.size() % 100 == 0 ? 0 : 1);
         }
         System.out.println("\nSending...");
 
         for (int i = 0; i < wrappedSerializedCommand.size(); i++) {
             channel.write(ByteBuffer.wrap(IOTools.getSerializedObj(wrappedSerializedCommand.get(i))));
-            Thread.sleep(100);
-            System.out.print(progressPatt);
+            Thread.sleep(1000);
+
+            if (onePercentOfChunks == -1) {
+                System.out.print(progressPatt);
+            } else {
+                if (i % onePercentOfChunks == 0)
+                    System.out.print(progressPatt);
+            }
+
         }
         System.out.println();
     }
@@ -266,14 +252,16 @@ public class IOTools {
         sendObject(oos, obj, _className, false);
     }
 
-    public static <T> void sendObject(ObjectOutputStream oos, T obj, String _className, boolean needStatusBar) throws IOException, InterruptedException {
+    public static <T> void sendObject(ObjectOutputStream oos, T obj, String _className, boolean needProcessBar) throws IOException, InterruptedException {
         List<Wrapper> wrappedSerializedCommand = WrapperUtils.wrapUp(IOTools.<T>getSerializedObj(obj), _className);
-
-        String progressPatt = "";
-        if (needStatusBar) {
+        int onePercentOfChunks = -1;
+        String progressPatt = "#";
+        if (needProcessBar) {
             if (wrappedSerializedCommand.size() < 100) {
                 for (int i = 0; i < 100 / wrappedSerializedCommand.size(); i++)
                     progressPatt += "#";
+            } else {
+                onePercentOfChunks = wrappedSerializedCommand.size() / 100;
             }
             System.out.println("\nSending...");
             System.out.print(progressPatt);
@@ -283,35 +271,16 @@ public class IOTools {
             oos.write(IOTools.getSerializedObj(wrappedSerializedCommand.get(i)));
             oos.flush();
             Thread.sleep(100);
-            if (needStatusBar)
-                System.out.print(progressPatt);
+            if (needProcessBar) {
+                if (onePercentOfChunks == -1) {
+                    System.out.print(progressPatt);
+                } else {
+                    if (i % onePercentOfChunks == 0)
+                        System.out.print(progressPatt);
+                }
+            }
         }
         System.out.println();
-    }
-
-    public static Command readCommand(BufferedReader bufferedReader) throws IOException {
-        String multilineCommand = IOTools.getMultiline(bufferedReader);
-        int indexOfFullCommandName = multilineCommand.lastIndexOf("\n");
-        String commandLine = multilineCommand.substring(0, indexOfFullCommandName);
-
-        if (commandLine.equals("")) {
-            throw new InvalidParameterException("Enter command\n");
-        }
-        Command command = CommandUtils.getCommand(commandLine);
-        if (!(multilineCommand.substring(indexOfFullCommandName).contains(command.getName()))) {
-            throw new InvalidParameterException("command not found\n");
-        }
-
-        return command;
-    }
-
-
-    public static Command readCommand(InputStream inputStream) throws IOException, ClassNotFoundException, InterruptedException {
-        Object obj = IOTools.readObject(inputStream);//new ObjectInputStream(inputStream)
-        if (!(obj instanceof Command)) {
-            throw new ClientRequestException(" send me only Command type objects!\n");
-        }
-        return (Command) obj;
     }
 
 

@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class WrapperUtils {
-    public static final int CHUNK_SIZE = 200;
-    public static final int SIZE_OF_CHUNK = 1000;
+    public static int CHUNK_SIZE = 200;
+    public static int SIZE_OF_CHUNK = 1000;
 
     public static <T> T getDeserializedObject(List<Wrapper> chunks) throws IOException, ClassNotFoundException {
         byte[] bytes = new byte[chunks.size() * CHUNK_SIZE];

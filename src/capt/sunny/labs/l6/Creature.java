@@ -11,19 +11,20 @@ import java.util.Date;
 
 import static capt.sunny.labs.l6.IOTools.getCSVQuotes;
 
+@SuppressWarnings("unused")
 interface LocationInt {
     double[] getLocation();
-
     void updateLocation(double[] _parameters);
 }
 
+@SuppressWarnings("unused")
 interface CreatureInt extends LocationInt {
     void die();
     void say(String _str);
 }
 
+@SuppressWarnings("deprecation")
 public class Creature implements CreatureInt, Comparable , Serializable {
-    private static double version = 1.0;
     protected String type;
     protected boolean isLive;
     protected int age;
@@ -45,6 +46,7 @@ public class Creature implements CreatureInt, Comparable , Serializable {
     }
 
 
+    @SuppressWarnings("deprecation")
     public Creature(String _type, int _age, String _name, double _height, Point _point, String _GMTString) {
         try {
             creationDate = new Date(_GMTString);
@@ -62,7 +64,6 @@ public class Creature implements CreatureInt, Comparable , Serializable {
 
     public Creature(JSONObject jsonObject) {
         try {
-            jsonObject = jsonObject.getJSONObject("element");
             try {
                 creationDate = new Date(jsonObject.get("creationDate").toString());
             } catch (JSONException e) {
@@ -116,9 +117,6 @@ public class Creature implements CreatureInt, Comparable , Serializable {
 
     }
 
-    public static double getVersion() {
-        return version;
-    }
 
     private void checkParameters() {
         if (age <= 0)
@@ -227,7 +225,7 @@ public class Creature implements CreatureInt, Comparable , Serializable {
             return false;
         }
         Creature other = (Creature) obj;
-        if ((name != other.name) | (height != other.height) | (age != other.age) | (type != other.type)) {
+        if ((!name.equals(other.name)) | (height != other.height) | (age != other.age) | (!type.equals(other.type))) {
             return false;
         }
         return true;

@@ -1,10 +1,11 @@
 package capt.sunny.labs.l6.serv;
 
-import capt.sunny.labs.l6.Command;
-import capt.sunny.labs.l6.CreatureMap;
-import capt.sunny.labs.l6.IOTools;
+import capt.sunny.labs.l6.*;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.InvalidParameterException;
@@ -19,15 +20,14 @@ import java.util.Date;
 public class MSocket implements Runnable {
 
     private String fileName;
-    private Command command;
-    private CreatureMap creatureMap = null;
+    private CreatureMap creatureMap = new CreatureMap();
     private String message;
     private Socket client;
 
     /**
      * @param _client - Socket obj which you can get by <code>serverSocket.accept();</code>
      */
-    public MSocket(Socket _client) {
+    MSocket(Socket _client) {
         client = _client;
     }
 
@@ -37,23 +37,34 @@ public class MSocket implements Runnable {
         System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
 
         try (ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
-             InputStream inputStream = client.getInputStream();) {
-
+             InputStream inputStream = client.getInputStream()) {
+            Command command = null;
             while (!client.isClosed()) {
-                try {
-                    //disconnect after 600 seconds of waiting
-                    command = IOTools.readCommand(inputStream);
-                    printRequest();
-                    checkCommand();
 
+                message = "";
+                try {
+
+                    //disconnect after 600 seconds of waiting
+                    try {
+                        command = CommandUtils.readCommand(inputStream);
+                    } catch (NoClassDefFoundError e1) {
+                        throw new RequestException("");
+                    }
+                    printRequest(command);
+
+                    check(command);
                     message = command.executeCommand(creatureMap, fileName, "UTF-8");
 
+                    check(command);
+
+                } catch (RequestException | StreamCorruptedException e) {
+                    System.out.printf("Incorrect request from [%s:%d]\n", client.getInetAddress().getHostAddress(), client.getPort());
+                    message = "Incorrect request: " + e.getMessage();
                 } catch (InvalidParameterException e) {
                     message = "Invalid: " + e.getMessage();
                 } catch (FileSavingException e) {
                     message = "FileSavingException " + e.getMessage();
-                } catch ( SocketException e) {
-                    System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
+                } catch (SocketException e) {
                     break;
                 } catch (IOException e) {
                     System.out.println(e.getMessage());
@@ -63,8 +74,9 @@ public class MSocket implements Runnable {
                     break;
                 }
 
-                if (!message.isEmpty())
+                if (!message.isEmpty()) {
                     IOTools.sendObject(oos, message, String.class.getName());
+                }
 
 
                 if (command != null && command.getName().equals("exit"))
@@ -72,9 +84,10 @@ public class MSocket implements Runnable {
 
             }
 
+
             throw new IOException();
 
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {//InterruptedException
             System.out.printf("Connection with %s:%d broke\n", client.getInetAddress().getHostAddress(), client.getPort());
             try {
                 client.close();
@@ -86,22 +99,26 @@ public class MSocket implements Runnable {
 
     }
 
-    private void checkCommand() {
+    private void check(Command command) {
         if (command.getName().equals("import")) {
-            command.deleteEmpty();
+            fileName = String.format("%s/file_created_by%s_[time:%s].csv", Main.DATA_DIR, client.toString().replaceAll("/", "l"), new Date().getTime());
             creatureMap = new CreatureMap(command.getObjectMap());
-        }else if (command.getName().equals("load")) {
-            if (message.startsWith(Main.DATA_DIR) || message.startsWith("~") || message.equals("data/data.csv") ) {
+        } else if (command.getName().equals("load")) {
+            if (message.startsWith(Main.DATA_DIR) || message.startsWith("~") || message.equals("data/data.csv")) {
                 fileName = message;
-                creatureMap = IOTools.getCreatureMapFromFile(fileName, "UTF-8");
-                message = "File loaded";
+                try {
+                    creatureMap = IOTools.getCreatureMapFromFile(fileName, "UTF-8");
+                    message = "File loaded";
+                } catch (Exception e) {
+                    message = "File didnt load: " + e.getMessage();
+                }
             } else {
                 message = "File didnt load: FORBIDDEN, path to file on server must starts with " + Main.DATA_DIR + "\n";
             }
         }
     }
 
-    private void printRequest() {
+    private void printRequest(Command command) {
         System.out.printf("\n[New request from: %s:%d]{%s}\n", client.getInetAddress().getHostAddress(), client.getPort(), command.toString());
     }
 }

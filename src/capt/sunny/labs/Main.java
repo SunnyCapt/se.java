@@ -2,15 +2,18 @@ package capt.sunny.labs;
 
 import capt.sunny.labs.l6.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.Inet4Address;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 //import capt.sunny.labs.l6.StringWrapper;
 
 public class Main {
 
-    public static void main(String[] args) throws ClassNotFoundException, IOException {
+    public static void main(String[] args) throws ClassNotFoundException, IOException, InterruptedException {
 //        JSONObject obj = new JSONObject("{\"name\":\"sdfsjdjhguashdchbe\",\"age\":666,\"height\":179, \"type\":\"afjhsdfsdfskj\",\"isLive\":true,\"creationDate\":\"10 Apr 2019 17:42:26 GMT\",\"location\":{\"x\":59.9506417,\"y\":30.3029817,\"z\":0}}");
 //        Creature creature = new Creature(obj);
 //        System.out.println(creature);
@@ -80,7 +83,22 @@ public class Main {
 //        Command command = CommandUtils.getCommand(IOTools.getMultiline(bufferedReader));
 //        System.out.println(IOTools.<Command>getDeserializedObject(IOTools.getSerializedObj(command)));
 //        System.out.println();
-        long a = 2342;
-        System.out.println("as"+a);
+//        long a = 2342;
+//        System.out.println("as"+a);
+//        SocketChannel channel = capt.sunny.labs.l6.client.Main.getChannel("localhost", 1337);
+//        channel.write(ByteBuffer.wrap("test".getBytes()));
+//        ServerSocket  server = new ServerSocket(1337, 1000, Inet4Address.getByName("localhost"));
+//        Socket client = server.accept();
+//        System.out.println("accepted");
+//        InputStream in = client.getInputStream();
+//        Command command = CommandUtils.readCommand(in);
+//        System.out.println("get command");
+//        ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+//        oos.writeObject("test");
+//        oos.flush();
+//        client.close();
+//        server.close();
+        new Thread(new capt.sunny.labs.l6.client.Main()).start();
+
     }
 }

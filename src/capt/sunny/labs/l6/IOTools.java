@@ -1,5 +1,7 @@
 package capt.sunny.labs.l6;
 
+import org.json.JSONObject;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -13,6 +15,8 @@ public class IOTools {
         StringBuilder withoutParametersStringBuilder = new StringBuilder();
         boolean isParameter = false;
         int intChar = paramBufferedReader.read();
+        if (intChar == 10 || intChar == 13)
+            intChar = paramBufferedReader.read();
         char c;
         boolean wasEnd = false;
         boolean startParameters = false;
@@ -51,6 +55,18 @@ public class IOTools {
     public static List<String[]> readFile(String fileName) throws IOException {
         InputStreamReader reader = new InputStreamReader(new FileInputStream(fileName));
         return readFile(reader, fileName);
+    }
+
+    public static JSONObject getJsonFile(String filePath){
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath));) {
+            while (reader.ready()) {
+                sb.append((char) reader.read());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new JSONObject(sb.toString());
     }
 
     public static List<String[]> readFile(InputStreamReader reader, String fileName) throws IOException {

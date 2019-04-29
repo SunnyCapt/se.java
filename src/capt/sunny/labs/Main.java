@@ -1,6 +1,7 @@
 package capt.sunny.labs;
 
 import capt.sunny.labs.l6.*;
+import capt.sunny.labs.l6.client.Client;
 
 import java.io.*;
 import java.net.Inet4Address;
@@ -8,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 
 //import capt.sunny.labs.l6.StringWrapper;
 
@@ -98,7 +100,9 @@ public class Main {
 //        oos.flush();
 //        client.close();
 //        server.close();
-        new Thread(new capt.sunny.labs.l6.client.Main()).start();
+        //new Thread(new capt.sunny.labs.l6.client.Main()).start();
+
+            new Client(Runtime.getRuntime()).run();
 
     }
 }

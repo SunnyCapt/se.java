@@ -1,7 +1,7 @@
 package capt.sunny.labs.l6;
 
 
-import capt.sunny.labs.l6.FileSavingException;
+import capt.sunny.labs.l6.serv.FileSavingException;
 
 import java.io.*;
 import java.security.InvalidParameterException;
@@ -15,7 +15,7 @@ import static capt.sunny.labs.l6.IOTools.getCSVQuotes;
 
 
 public class CreatureMap implements Serializable {
-    private Map<String, Creature> map = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Creature> map = new ConcurrentHashMap<>();
     private int lastHashCode;
     private Date creationDate = new Date();
     private Comparator<Map.Entry<String, Creature>> comparator = Comparator.comparingInt(a -> a.getValue().getAge());
@@ -29,6 +29,7 @@ public class CreatureMap implements Serializable {
         lines.forEach(e -> map.put(e[0], new Creature(e)));
         lastHashCode = hashCode();
     }
+
 
     /**
      * Добавляет в колекцию новое значение и сортирует ее.
@@ -124,6 +125,10 @@ public class CreatureMap implements Serializable {
      */
     void remove_lower(String key) {
         map.entrySet().stream().filter(e -> key.compareTo(e.getKey()) > 0).forEach(e -> remove(e.getKey()));
+    }
+
+    public void copyOf(CreatureMap _creatureMap){
+        map.putAll(_creatureMap.map);
     }
 
     private String toCSV() {

@@ -100,7 +100,7 @@ public class Command implements Serializable {
         }
     }
 
-    public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException, capt.sunny.labs.l6.FileSavingException {
+    public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException, InvalidParameterException{
 
 
 //        if ((creatureMap == null) && (!name.equals("help")) && (!name.equals("load")) && (!name.equals("import")))
@@ -167,7 +167,7 @@ public class Command implements Serializable {
                 try {
                     creatureMap.save(fileName, charsetName);
                     return "File saved, bye...";
-                } catch (capt.sunny.labs.l6.FileSavingException ignored) {
+                } catch (FileSavingException ignored) {
                     return "File didnt save, sorry, bye...";
                 }
             default:

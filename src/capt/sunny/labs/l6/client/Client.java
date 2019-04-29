@@ -24,10 +24,11 @@ public class Client implements Runnable {
             try {
                 Thread.sleep(1);
                 try {
-                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save;"), Command.class.getName());
+                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save"), Command.class.getName());
                     message = "\nAll saved";
                 } catch (Exception e2) {
                     message = "\nDidt save, sorry";
+                    e2.printStackTrace();
                 }
                 System.out.println(message);
                 System.out.println("\nBye, kitty!");
@@ -42,7 +43,7 @@ public class Client implements Runnable {
             try {
                 Thread.sleep(1);
                 try {
-                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save;"), Command.class.getName());
+                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save"), Command.class.getName());
                     message = "\nAll saved";
                 } catch (Exception e2) {
                     message = "\nDidt save, sorry";
@@ -98,7 +99,7 @@ public class Client implements Runnable {
                             System.out.print(">>> ");
 
                             Command command = CommandUtils.readCommand(bufferedReader);
-
+                           // IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save"), Command.class.getName());
                             IOTools.<Command>sendObject(channel, command, Command.class.getName());
                             Object obj = IOTools.readObject(ois, true);
                             printResp(obj);

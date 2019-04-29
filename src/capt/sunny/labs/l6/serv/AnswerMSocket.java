@@ -37,8 +37,7 @@ public class AnswerMSocket implements Runnable {
         }
         try {
             if (!message.isEmpty()) {
-                Thread.sleep(100);
-                IOTools.sendObject(oos, message, String.class.getName());
+                IOTools.sendObject(oos, message, String.class.getName(), false, true);
             }
         } catch (IOException | InterruptedException e) {
             exception[0]=e;

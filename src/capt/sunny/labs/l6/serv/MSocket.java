@@ -40,7 +40,7 @@ public class MSocket implements Runnable {
             this.creatureMap = _creatureMap;
             creatureMap.copyOf(IOTools.getCreatureMapFromFile(fileName, "UTF-8"));
         } catch (Exception e) {
-            System.out.println("\nCan not \"full_path_to_file\" in the configuration file (data/config.json)\n");
+            System.out.println("\nCan not \"full_path_to_file\" in the config (./config.json)\n");
         }
     }
 
@@ -65,10 +65,8 @@ public class MSocket implements Runnable {
                     }
                     printRequest(command);
 
-                    //createAnswerThread(oos);
-                    check(command);
-                    message = command.executeCommand(creatureMap, fileName, "UTF-8");
-                    check(command);
+                    createAnswerThread(oos);
+
 
                 } catch (RequestException | StreamCorruptedException e) {
                     System.out.printf("Incorrect request from [%s:%d]\n", client.getInetAddress().getHostAddress(), client.getPort());
@@ -118,9 +116,7 @@ public class MSocket implements Runnable {
     private void createAnswerThread(ObjectOutputStream oos) throws Exception {
         Thread answerThread = new Thread(new AnswerMSocket(command, creatureMap, oos, fileName, exception));
         answerThread.start();
-        System.out.println(1);
         answerThread.interrupt();
-        System.out.println(2);
         check();
     }
 
@@ -134,23 +130,6 @@ public class MSocket implements Runnable {
         System.out.printf("\n[New request from: %s:%d]{%s}\n", client.getInetAddress().getHostAddress(), client.getPort(), command.toString());
     }
 
-    private void check(Command command) {
-        String _fileName;
-        if (command.getName().equals("import")) {
-            creatureMap.copyOf(new CreatureMap(command.getObjectMap()));
-        } else if (command.getName().equals("load")) {
-            if (message.startsWith(Server.getDataDirectory()) || message.startsWith("~") || message.equals("data/data.csv")) {
-                _fileName = message;
-                try {
-                    creatureMap.copyOf(IOTools.getCreatureMapFromFile(_fileName, "UTF-8"));
-                    message = "File loaded";
-                } catch (Exception e) {
-                    message = "File didnt load: " + e.getMessage();
-                }
-            } else {
-                message = "File didnt load: FORBIDDEN, path to file on server must starts with " + Server.getDataDirectory() + "\n";
-            }
-        }
-    }
+
 }
 

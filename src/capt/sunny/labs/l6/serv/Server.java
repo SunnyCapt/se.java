@@ -23,9 +23,9 @@ public class Server implements Runnable {
 
     static {
         try {
-            config = IOTools.getJsonFile("data/config.json");
+            config = IOTools.getJsonFile("config.json");
         } catch (Exception e) {
-            System.out.println("\nCannt find/read config file(data/config.csv), sorry..\n");
+            System.out.println("\nCannt find/read config file(config.csv), sorry..\n");
             System.exit(-1);
         }
     }

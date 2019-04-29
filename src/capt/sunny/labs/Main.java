@@ -102,7 +102,6 @@ public class Main {
 //        server.close();
         //new Thread(new capt.sunny.labs.l6.client.Main()).start();
 
-            new Client(Runtime.getRuntime()).run();
 
     }
 }

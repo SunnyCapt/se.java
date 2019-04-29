@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 public enum Commands {
     SHOW("\nshow;\n\tвывести в стандартный поток вывода все " +
             "элементы коллекции в строковом представлении\n",  new String[]{}),
-    IMPORT("\nload {\"fileName\":\"path/to/file\"};" +
-            "\n\tSet file with data (from client)\n",  new String[]{"fileName"}),
+//    IMPORT("\nload {\"fileName\":\"path/to/file\"};" +
+//            "\n\tSet file with data (from client)\n",  new String[]{"fileName"}),
     EXIT("\nexit;\n\tвыход с сохранением\n",  new String[]{}),
     INFO("\ninfo;\n\tвывести в стандартный поток вывода информацию " +
             "о коллекции (тип, дата \n\tинициализации, количество элементов)\n",
@@ -60,7 +60,7 @@ public enum Commands {
             "\t      }\n", new String[]{"key"});
 
     private static final String commandNames = Arrays.asList(values()).stream().map(e -> String.format("%s,", e.name())).collect(Collectors.joining());
-    private static String help = ADD_IF_MIN.manual + EXIT.manual + HELP.manual + REMOVE.manual + REMOVE_LOWER.manual + INSERT.manual + INFO.manual + LOAD.manual + SHOW.manual + SAVE.manual + IMPORT.manual;
+    private static String help = ADD_IF_MIN.manual + EXIT.manual + HELP.manual + REMOVE.manual + REMOVE_LOWER.manual + INSERT.manual + INFO.manual + SHOW.manual + SAVE.manual; // + IMPORT.manual + LOAD.manual;
     private String manual;
     private String[] parameterNames;
 
@@ -79,7 +79,6 @@ public enum Commands {
     }
 
     public static String help() {
-        commandNames.contains("ass");
         return help;
     }
 

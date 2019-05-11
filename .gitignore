@@ -7,3 +7,4 @@ out/
 lib/
 src/capt/sunny/labs/l6/client/META-INF/
 src/capt/sunny/labs/l6/serv/META-INF/
+config.json

@@ -4,18 +4,23 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 
-public class Main {
+public class Main implements Runnable {
     private static void pprint(String text) {
         System.out.println("[PERFORMANCE_INFO]: " + text);
     }
 
     public static void main(String[] args) {
+        new Main().run();
+    }
+
+    @Override
+    public void run() {
         //рождается
         //.......
         //доживает до 666 лет
 
         String heroArt =
-                        "\n                                                 KARLSON                                                                                                   \n\n"+
+                "\n                                                 KARLSON                                                                                                   \n\n" +
                         "                                                  /((((///(#/                                                                                                  \n" +
                         "                                             (#,*//////////((//(,                                                                                              \n" +
                         "                                          ,#%%&(/////***/////////(#*                                                                                           \n" +
@@ -136,5 +141,6 @@ public class Main {
 
 //конец
     }
+
 
 }

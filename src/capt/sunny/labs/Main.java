@@ -1,15 +1,11 @@
 package capt.sunny.labs;
 
-import capt.sunny.labs.l6.*;
-import capt.sunny.labs.l6.client.Client;
-
-import java.io.*;
-import java.net.Inet4Address;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.util.Arrays;
+import javax.management.StandardEmitterMBean;
+import java.io.IOException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 //import capt.sunny.labs.l6.StringWrapper;
 
@@ -100,8 +96,84 @@ public class Main {
 //        oos.flush();
 //        client.close();
 //        server.close();
-        //new Thread(new capt.sunny.labs.l6.client.Main()).start();
+//            Thread thr = new Thread((Runnable) new capt.sunny.labs.l4.Main());
+//            System.out.println("[??????]"+thr.getState());
+//            thr.start();
+//            System.out.println("[??????]"+thr.getState());
+//            thr.interrupt();
+//            System.out.println("[??????]"+thr.getState());
+//            Thread.sleep(5000);
+//            System.out.println("[??????]"+thr.getState());
+//
+//        S str = new S();
+//        new Thread(()->{
+//            try {
+//                Thread.sleep(2000);
+//                System.out.println("str was notify");
+//                str.notify();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }).start();
+//        System.out.println("str was block");
+//        str.wait();
+//        java.util.concurrent.
+        Semaphore sem = new Semaphore(1, true);
+        Lock lock = new ReentrantLock();
+        for (int i =0; i<10; i+=2){
+            S s1 = new S(sem, i);
+            S s2 = new S(sem, i+1);
+            s1.start();
+            s2.start();
+        }
 
 
+
+    }
+
+    public static synchronized void test() {
+        System.out.println("test");
+    }
+}
+
+class S extends Thread{
+    Semaphore sem;
+    Lock lock;
+    int val;
+
+    S(Semaphore _sem, int i){
+        sem = _sem;
+        val = i;
+    }
+
+    public S(Lock _lock, int i) {
+        lock = _lock;
+        val = i;
+    }
+
+    @Override
+    public void run(){
+        try {
+            sem.acquire();
+           // lock.lockInterruptibly();
+            System.out.println(val);
+        } catch (InterruptedException e) {
+            System.out.println("я прервался" + val);
+        }finally {
+            sem.release();
+            //lock.unlock();
+        }
+    }
+
+    public void check(){
+        try {
+            sem.acquire();
+            System.out.println(val%2==0?"четный":"нечетный");
+        }catch (InterruptedException e) {
+            System.out.println("я прервался" + val);
+        }finally {
+            sem.release();
+            //lock.unlock();
+        }
     }
 }

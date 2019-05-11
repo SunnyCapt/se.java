@@ -1,6 +1,6 @@
 {
-  "full_path_to_file": "D:\\Projects\\idea\\labs\\data\\main_file.csv",
-  "working_directory": "/home/s278068/labs/data/",
+  "full_path_to_file": "~/path/to/main_file.csv",
+  "working_directory": "~/path/to/working_directory",
   "number_of_allowed_requests": 10,
   "port_number": -1,
   "host_name": "localhost"

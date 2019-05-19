@@ -19,12 +19,9 @@ public class Client implements Runnable {
     private int PORT = -1;
     private String message = "";
     private SocketChannel channel = null;
-    private String fileName;
-    private boolean needLoad = true;
 
 
-    public Client(Runtime runtime, String _fileName) {
-        fileName = _fileName;
+    public Client(Runtime runtime) {
         runtime.addShutdownHook(new Thread(() -> {
             try {
                 Thread.sleep(1);
@@ -65,12 +62,7 @@ public class Client implements Runnable {
 
     public static void main(String[] args) {
 
-        Map<String, String> env = System.getenv();
-        String fileName = env.get("FILE_FOR_5LAB");
-        if (fileName == null) {
-            System.out.println("Set an environment variable named \"FILE_FOR_5LAB\" to load collection from server\n");
-        }
-        new Client(Runtime.getRuntime(), fileName).run();
+        new Client(Runtime.getRuntime()).run();
     }
 
 
@@ -107,13 +99,7 @@ public class Client implements Runnable {
                     for (; ; ) {
                         message = "";
                         try {
-                            if (needLoad && (fileName != null)) {
-                                System.out.printf("\nLoading %s...\n", fileName);
-                                IOTools.<Command>sendObject(channel, CommandUtils.getCommand(String.format("load {\"fileName\":\"%s\"}", fileName)), Command.class.getName());
-                                Object obj = IOTools.readObject(ois, true);
-                                printResp(obj);
-                                needLoad = false;
-                            }
+
                             System.out.print(">>> ");
 
                             Command command = CommandUtils.readCommand(bufferedReader);

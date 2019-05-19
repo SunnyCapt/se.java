@@ -16,18 +16,17 @@ import static capt.sunny.labs.l7.IOTools.getCSVQuotes;
 
 
 public class CreatureMap implements Serializable {
-    private ConcurrentHashMap<String, capt.sunny.labs.l7.Creature> map = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Creature> map = new ConcurrentHashMap<>();
     private int lastHashCode;
     private Date creationDate = new Date();
-    private Comparator<Map.Entry<String, capt.sunny.labs.l7.Creature>> comparator = Comparator.comparingInt(a -> a.getValue().getAge());
+    private Comparator<Map.Entry<String, Creature>> comparator = Comparator.comparingInt(a -> a.getValue().getAge());
 
     public CreatureMap() {
         lastHashCode = 0;
     }
 
     public CreatureMap(List<String[]> lines) throws InvalidParameterException {
-        lines.remove(lines.get(lines.size()-1));//??????
-        lines.forEach(e -> map.put(e[0], new capt.sunny.labs.l7.Creature(e)));
+        lines.stream().filter(c -> c.length!=0).forEach(e -> map.put(e[0], new Creature(e)));
         lastHashCode = hashCode();
     }
 
@@ -38,7 +37,7 @@ public class CreatureMap implements Serializable {
      * @param key     String ключ нового элемента
      * @param element Creature
      */
-    void insert(String key, capt.sunny.labs.l7.Creature element) {
+    void insert(String key, Creature element) {
         map.put(key, element);
         //sortKeys();
     }

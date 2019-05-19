@@ -115,8 +115,8 @@ public class IOTools {
         return fileLines;
     }
 
-    public static capt.sunny.labs.l7.CreatureMap getCreatureMapFromFile(String fileName, String charsetName) {
-        capt.sunny.labs.l7.CreatureMap creatureMap = new capt.sunny.labs.l7.CreatureMap();
+    public static CreatureMap getCreatureMapFromFile(String fileName, String charsetName) {
+        CreatureMap creatureMap = new CreatureMap();
 
 
         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(fileName), charsetName)) {

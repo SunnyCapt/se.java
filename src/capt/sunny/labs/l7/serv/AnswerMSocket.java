@@ -17,21 +17,21 @@ public class AnswerMSocket implements Runnable {
     String message = "";
     Exception[] exception;
     ObjectOutputStream oos;
+    User[] user;
 
-    public AnswerMSocket(Command _command, CreatureMap _creatureMap, ObjectOutputStream _oos, String _fileName, Exception[] _exception) {
+    public AnswerMSocket(Command _command, CreatureMap _creatureMap, ObjectOutputStream _oos, String _fileName, Exception[] _exception, User[] _user) {
         command = _command;
         creatureMap = _creatureMap;
         fileName = _fileName;
         exception = _exception;
         oos = _oos;
+        user = _user;
     }
 
     @Override
     public void run() {
         try {
-            check(command);
-            message = command.executeCommand(creatureMap, fileName, "UTF-8");
-            check(command);
+            message = command.executeCommand(creatureMap, fileName, user, "UTF-8");
         } catch (InvalidParameterException | FileSavingException e) {
             message = "Invalid: " + e.getMessage();
         } catch (Exception e) {
@@ -46,22 +46,4 @@ public class AnswerMSocket implements Runnable {
         }
     }
 
-    private void check(Command command) {
-        String _fileName;
-        if (command.getName().equals("import")) {
-            creatureMap.copyOf(new CreatureMap(command.getObjectMap()));
-        } else if (command.getName().equals("load")) {
-            if (message.startsWith(capt.sunny.labs.l7.serv.Server.getDataDirectory()) || message.startsWith("~") || message.equals("data/data.csv")) {
-                _fileName = message;
-                try {
-                    creatureMap.copyOf(IOTools.getCreatureMapFromFile(_fileName, "UTF-8"));
-                    message = "File loaded";
-                } catch (Exception e) {
-                    message = "File didnt load: " + e.getMessage();
-                }
-            } else {
-                message = "File didnt load: FORBIDDEN, path to file on server must starts with " + Server.getDataDirectory() + "\n";
-            }
-        }
-    }
 }

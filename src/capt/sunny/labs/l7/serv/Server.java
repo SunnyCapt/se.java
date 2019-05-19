@@ -12,6 +12,7 @@ import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class Server implements Runnable {
@@ -21,6 +22,8 @@ public class Server implements Runnable {
     private static String HOST;
     private static int PORT;
     private static int numberOfAllowedRequests;
+    private static String fileName;
+
 
     static {
         try {
@@ -41,9 +44,17 @@ public class Server implements Runnable {
             System.out.println("\nwrong config: " + e.getMessage());
             System.exit(-1);
         }
+
+        Map<String, String> env = System.getenv();
+        fileName = env.get("FILE_FOR_LAB");
+        if (fileName == null) {
+            System.out.println("Set an environment variable named \"FILE_FOR_LAB\"\n");
+            System.exit(-1);
+        }
     }
 
-    CreatureMap creatureMap = new CreatureMap();
+
+    CreatureMap creatureMap = IOTools.getCreatureMapFromFile(fileName, "UTF-8");
     private String message = "";
 
     public Server(Runtime runtime) {

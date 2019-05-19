@@ -4,6 +4,7 @@ import capt.sunny.labs.l7.*;
 import capt.sunny.labs.l7.serv.AnswerMSocket;
 import capt.sunny.labs.l7.serv.Server;
 
+import javax.jws.soap.SOAPBinding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -28,7 +29,8 @@ public class MSocket implements Runnable {
     private String message;
     private Socket client = null;
     private final Exception[] exception = {null};
-    Command command = null;
+    private Command command = null;
+    private User[] user = new User[1];
     private ExecutorService executeIt = Executors.newFixedThreadPool(capt.sunny.labs.l7.serv.Server.getNumberOfAllowedRequests()); //5 is number of allowed requests
 
 
@@ -40,9 +42,8 @@ public class MSocket implements Runnable {
             fileName = Server.config.getString("full_path_to_file");//full path to the file
             this.client = _client;
             this.creatureMap = _creatureMap;
-            creatureMap.copyOf(IOTools.getCreatureMapFromFile(fileName, "UTF-8"));
         } catch (Exception e) {
-            System.out.println("\nCan not \"full_path_to_file\" in the config (./config.json)\n");
+            System.out.println("\nCan not create new connection(MSocket)");
         }
     }
 
@@ -116,7 +117,7 @@ public class MSocket implements Runnable {
     }
 
     private void createAnswerThread(ObjectOutputStream oos) throws Exception {
-        Thread answerThread = new Thread(new AnswerMSocket(command, creatureMap, oos, fileName, exception));
+        Thread answerThread = new Thread(new AnswerMSocket(command, creatureMap, oos, fileName, exception, user));
         answerThread.start();
         answerThread.interrupt();
         check();

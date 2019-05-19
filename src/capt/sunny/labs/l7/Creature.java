@@ -2,28 +2,31 @@ package capt.sunny.labs.l7;
 
 import capt.sunny.labs.l7.serv.Point;
 import capt.sunny.labs.l7.serv.PointInt;
+import capt.sunny.labs.l7.serv.User;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.security.InvalidParameterException;
+import java.time.LocalDateTime;
 import java.util.Date;
+
 
 import static capt.sunny.labs.l7.IOTools.getCSVQuotes;
 
-@SuppressWarnings("unused")
+
 interface LocationInt {
     double[] getLocation();
     void updateLocation(double[] _parameters);
 }
 
-@SuppressWarnings("unused")
+
 interface CreatureInt extends LocationInt {
     void die();
     void say(String _str);
 }
 
-@SuppressWarnings("deprecation")
+
 public class Creature implements CreatureInt, Comparable , Serializable {
     protected String type;
     protected boolean isLive;
@@ -32,24 +35,38 @@ public class Creature implements CreatureInt, Comparable , Serializable {
     protected double height;
     protected PointInt location;
     private double size;
-    private Date creationDate;
+    private LocalDateTime creationDate;
+    private User owner;
 
     public Creature(String _type, int _age, String _name, double _height, Point _point) {
+        creationDate = LocalDateTime.now();
         name = _name;
         age = _age;
         height = _height;
         type = _type;
         isLive = true;
         location = _point;
-        creationDate = new Date();
+        setSize();
+    }
+
+    public Creature(String _type, int _age, String _name, double _height, Point _point, User _user){
+        creationDate = LocalDateTime.now();
+        name = _name;
+        age = _age;
+        height = _height;
+        type = _type;
+        isLive = true;
+        location = _point;
+        owner = _user;
         setSize();
     }
 
 
-    @SuppressWarnings("deprecation")
-    public Creature(String _type, int _age, String _name, double _height, Point _point, String _GMTString) {
+
+
+    public Creature(String _type, int _age, String _name, double _height, Point _point, String _dateTimeString) {
         try {
-            creationDate = new Date(_GMTString);
+            creationDate = LocalDateTime.parse(_dateTimeString);
         } catch (IllegalArgumentException e) {
             throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: " + new Date().toGMTString() + "\n");
         }
@@ -62,14 +79,16 @@ public class Creature implements CreatureInt, Comparable , Serializable {
         setSize();
     }
 
-    public Creature(JSONObject jsonObject) {
+    public Creature(JSONObject jsonObject, User _user) {
+        if (_user==null)
+            throw new InvalidParameterException("Creature object cannot be created: user not logged in\n");
         try {
             try {
-                creationDate = new Date(jsonObject.get("creationDate").toString());
+                creationDate = LocalDateTime.parse(jsonObject.get("creationDate").toString());
             } catch (JSONException e) {
-                creationDate = new Date();
+                creationDate = LocalDateTime.now();
             } catch (IllegalArgumentException e) {
-                throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: \n" + new Date().toGMTString());
+                throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: \n" + LocalDateTime.now().toString());
             }
             name = jsonObject.getString("name");
             age = jsonObject.getInt("age");
@@ -77,6 +96,7 @@ public class Creature implements CreatureInt, Comparable , Serializable {
             type = jsonObject.getString("type");
             isLive = jsonObject.getBoolean("isLive");
             location = new Point(jsonObject.getJSONObject("location"));
+            owner = _user;
             setSize();
             checkParameters();
         } catch (JSONException e) {
@@ -105,14 +125,14 @@ public class Creature implements CreatureInt, Comparable , Serializable {
         }
         if (line.length == 10 && line[9] != null) {
             try {
-                creationDate = new Date(line[9]);
+                creationDate = LocalDateTime.parse(line[9]);
             } catch (IllegalArgumentException e) {
                 throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: \n" + new Date().toGMTString());
             } catch (JSONException e) {
-                creationDate = new Date();
+                creationDate = LocalDateTime.now();
             }
         } else {
-            creationDate = new Date();
+            creationDate = LocalDateTime.now();
         }
 
     }
@@ -196,16 +216,16 @@ public class Creature implements CreatureInt, Comparable , Serializable {
 
 
     public String toCSVLine() {
-        return String.format("\"%s\",%d,%s,\"%s\",%b,%s,%s,%s,\"%s\"\n", getCSVQuotes(name), age, String.valueOf(height), getCSVQuotes(type), isLive, String.valueOf(location.get()[0]), String.valueOf(location.get()[1]), String.valueOf(location.get()[2]), creationDate.toGMTString());
+        return String.format("\"%s\",%d,%s,\"%s\",%b,%s,%s,%s,\"%s\"\n", getCSVQuotes(name), age, String.valueOf(height), getCSVQuotes(type), isLive, String.valueOf(location.get()[0]), String.valueOf(location.get()[1]), String.valueOf(location.get()[2]), creationDate.toString(), owner);
     }
 
     public String toString() {
-        return String.format("\n\ttype: %s\n\tname: %s\n\tage: %s\n\thieght: %s\n\tisLive: %s\n\tlocation: %s\n\tsize: %s\n\tcreation date: %s\n", type, name, String.valueOf(age), String.valueOf(height), String.valueOf(isLive), location.toString(), String.valueOf(size), creationDate.toInstant());
+        return String.format("\n\ttype: %s\n\tname: %s\n\tage: %s\n\thieght: %s\n\tisLive: %s\n\tlocation: %s\n\tsize: %s\n\tcreation date: %s\n", type, name, String.valueOf(age), String.valueOf(height), String.valueOf(isLive), location.toString(), String.valueOf(size), creationDate.toString());
     }
 
     @Override
     public int hashCode() {
-        char[] _data = (name + type + creationDate.toGMTString()).toCharArray();
+        char[] _data = (name + type + creationDate.toString()).toCharArray();
         int n = 1;
         for (int i : _data) {
             if (i == 0) {

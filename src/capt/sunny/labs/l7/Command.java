@@ -1,17 +1,13 @@
 package capt.sunny.labs.l7;
 
 
-import capt.sunny.labs.l7.Commands;
-import capt.sunny.labs.l7.Creature;
-import capt.sunny.labs.l7.CreatureMap;
-import capt.sunny.labs.l7.IOTools;
 import capt.sunny.labs.l7.serv.FileSavingException;
+import capt.sunny.labs.l7.serv.User;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.security.InvalidParameterException;
-import java.util.List;
 
 /**
  * @version 1.0
@@ -21,18 +17,21 @@ import java.util.List;
 public class Command implements Serializable {
 
     protected String name;
-    protected String firstParameter;
-    protected String secondParameter;
-    protected String stringParameter = null;
+    protected String rawFirstParameter;
+    protected String rawSecondParameter;
+    protected String firstParameter = null;
+
+
+    protected String secondParameter = null;
     protected Creature object = null;
-    protected List<String[]> srcFile = null;
+    protected User user = null;
 
     public Command(String _name, String _firstParameters, String _secondParameter) throws InvalidParameterException {
         if (!Commands.check(_name))
             throw new InvalidParameterException("\nUnknown command\n");
         name = _name;
-        firstParameter = _firstParameters;
-        secondParameter = _secondParameter;
+        rawFirstParameter = _firstParameters;
+        rawSecondParameter = _secondParameter;
         this.parse();
     }
 
@@ -40,17 +39,18 @@ public class Command implements Serializable {
         return name;
     }
 
-    public String getStringParameter() {
-        return stringParameter;
+    public String getFirstParameter() {
+        return firstParameter;
+    }
+
+    public String getSecondParameter() {
+        return secondParameter;
     }
 
     public Creature getObject() {
         return object;
     }
 
-    public List<String[]> getObjectMap() {
-        return srcFile;
-    }
 
 //    public void deleteEmpty() {
 //        srcFile.forEach(e -> {
@@ -60,40 +60,34 @@ public class Command implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("\nCommand: %s\nFirst Parameter: %s\nObject: %s\nCollection from file: %s\n", this.name, this.stringParameter, this.object, this.srcFile != null ? "some bytes" : null);
+        return String.format("\nCommand: %s\nFirst Parameter: %s\nObject: %s\n\n", this.name, this.firstParameter, this.object);
     }
 
-    @SuppressWarnings("ConstantConditions")
     protected void parse() {
         String[] commandParameters = Commands.valueOf(this.name.toUpperCase()).getParameterNames();
-        if (commandParameters.length != (firstParameter == null ? 0 : 1) + (secondParameter == null ? 0 : 1)) {
+        if (commandParameters.length != (rawFirstParameter == null ? 0 : 1) + (rawSecondParameter == null ? 0 : 1)) {
             throw new InvalidParameterException("\nWrong parameters for: " + name + "\n");
         }
         if (commandParameters.length >= 1) {
             try {
-                JSONObject tempObj = new JSONObject(firstParameter);
+                JSONObject tempObj = new JSONObject(rawFirstParameter);
                 if (tempObj.has("key") && commandParameters[0].equals("key")) {
-                    stringParameter = tempObj.getString("key");
-                } else if (tempObj.has("fileName") && commandParameters[0].equals("fileName")) {
-                    if (name.equals("load"))
-                        stringParameter = tempObj.getString("fileName");
-                    else if (name.equals("import")) {
-                        try {
-                            srcFile = IOTools.readFile(tempObj.getString("fileName"));
-                        } catch (Exception e) {
-                            throw new InvalidParameterException("file could not be read\n");
-                        }
-                    }
+                    firstParameter = tempObj.getString("key");
                 } else if (tempObj.has("element") && commandParameters[0].equals("element")) {
-                    tempObj = new JSONObject(firstParameter);
-                    object = new Creature(tempObj.getJSONObject("element"));
+                    tempObj = new JSONObject(rawFirstParameter);
+                    object = new Creature(tempObj.getJSONObject("element"), user);
+                } else if (tempObj.has("nick") && commandParameters[0].equals("nick")) {
+                    firstParameter = tempObj.getString("nick");
                 } else {
                     throw new InvalidParameterException("\nWrong parameters for: " + name + "\n");
                 }
                 if (commandParameters.length == 2) {
                     if (commandParameters[1].equals("element")) {
-                        tempObj = new JSONObject(secondParameter);
-                        object = new Creature(tempObj.getJSONObject("element"));
+                        tempObj = new JSONObject(rawSecondParameter);
+                        object = new Creature(tempObj.getJSONObject("element"), user);
+                    } else if (commandParameters[1].equals("password")) {
+                        tempObj = new JSONObject(rawSecondParameter);
+                        secondParameter = tempObj.getString("password");
                     } else {
                         throw new InvalidParameterException("\nWrong parameters for: " + name + "\n");
                     }
@@ -104,23 +98,17 @@ public class Command implements Serializable {
         }
     }
 
-    public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException, InvalidParameterException{
+    public String executeCommand(CreatureMap creatureMap, String fileName, User[] user, String charsetName) throws FileSavingException, InvalidParameterException {
 
-
-//        if ((creatureMap == null) && (!name.equals("help")) && (!name.equals("load")) && (!name.equals("import")))
-//            throw new InvalidParameterException("Collection not loaded. To load, use the load or import:\n" + Commands.LOAD.man());
-
+        if (user[0] == null && (!name.equals("login")) && (!name.equals("help")))
+            return "\nYou are not logged in, please use the login \ncommand for it. (see manual with help command)";
         switch (name) {
-            case "load":
-                return stringParameter;
-            case "import":
-                if (creatureMap != null)
-                    return "collection imported\n";
-                else
-                    return "collection didnt import\n";
+            case "login":
+                user[0] = User.login(firstParameter, secondParameter); //try-catch
+                return String.format("\nHello %s. You haven't been in street racing for a long time!", firstParameter);
             case "insert":
                 try {
-                    creatureMap.insert(stringParameter, object);
+                    creatureMap.insert(firstParameter, object);
                     return "Item added\n";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
@@ -147,7 +135,7 @@ public class Command implements Serializable {
                 }
             case "remove":
                 try {
-                    creatureMap.remove(stringParameter);
+                    creatureMap.remove(firstParameter);
                     return "item removed";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
@@ -158,7 +146,7 @@ public class Command implements Serializable {
                 return creatureMap.info();
             case "remove_lower":
                 try {
-                    creatureMap.remove_lower(stringParameter);
+                    creatureMap.remove_lower(firstParameter);
                     return "all lower items removed";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());

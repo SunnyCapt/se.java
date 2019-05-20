@@ -111,7 +111,7 @@ public class CreatureMap  {
      @return inforamtion String результат
      */
     public String info() {
-        String information = String.format("\ntype: %s\nobjects number: %d\nCreation date: %s\n", map.getClass().getName(), map.size(), createdDate.toString());
+        String information = String.format("\nspecies: %s\nobjects number: %d\nCreation date: %s\n", map.getClass().getName(), map.size(), createdDate.toString());
         return information;
     }
 
@@ -167,7 +167,7 @@ public class CreatureMap  {
         final String[] result = {""};
         for (String _key : sortedKeys) {
             Creature _item = map.get(_key);
-            result[0] += String.format("key: %s \nelement: \n\ttype: %s\n\tname: %s\n\tage: %d\n\thieght: %s\n\tisLive: %s\n\tlocation: %s\n===========================================\n",
+            result[0] += String.format("key: %s \nelement: \n\tspecies: %s\n\tcommandName: %s\n\tage: %d\n\thieght: %s\n\tisLive: %s\n\tlocation: %s\n===========================================\n",
                     _key, _item.type, _item.name, _item.age, String.valueOf(_item.height), _item.isLive ? "True" : "False", _item.location.toString());
         }
         return result[0];

@@ -114,10 +114,10 @@ public class Main {
 /*
 Creature's structure
 {
-    "name": "_name",
+    "commandName": "_name",
     "age": 2019,
     "height": 100.0,
-    "type": "_type",
+    "species": "_type",
     "isLive": true,
     "location": {
         "x": 1.0,
@@ -127,7 +127,7 @@ Creature's structure
 }
  */
 /*
-"key","name","age","height","type","isLive","x","y","z"
+"key","commandName","age","height","species","isLive","x","y","z"
 */
 
 /*
@@ -135,10 +135,10 @@ Creature's structure
                 "key":"key0"
               }{
                 "element":{
-                             "name":"name3",
+                             "commandName":"name3",
                              "age":-1,
                              "height":345.34,
-                             "type":"human",
+                             "species":"human",
                              "isLive":true,
                              "location":{
                                           "x":23.23,

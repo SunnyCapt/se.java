@@ -114,7 +114,7 @@ public class CreatureMap implements Serializable {
      * @return inforamtion String результат
      */
     String info() {
-        String information = String.format("\ntype: %s\nobjects number: %d\nCreation date: %s\n", map.getClass().getName(), map.size(), creationDate.toString());
+        String information = String.format("\nspecies: %s\nobjects number: %d\nCreation date: %s\n", map.getClass().getName(), map.size(), creationDate.toString());
         return information;
     }
 

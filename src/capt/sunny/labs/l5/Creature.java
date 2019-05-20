@@ -35,10 +35,10 @@ public class Creature implements CreatureInt{
 
     public Creature(JSONObject jsonObject) {
         try {
-            name = jsonObject.getString("name");
+            name = jsonObject.getString("commandName");
             age = jsonObject.getInt("age");
             height = jsonObject.getDouble("height");
-            type = jsonObject.getString("type");
+            type = jsonObject.getString("species");
             isLive = jsonObject.getBoolean("isLive");
             location = new Point(jsonObject.getJSONObject("location"));
             if (age<=0)
@@ -46,9 +46,9 @@ public class Creature implements CreatureInt{
             if(height<=0)
                 throw new InvalidParameterException("height must be greater than zero");
             if (name.equals(""))
-                throw new InvalidParameterException("name must not be empty");
+                throw new InvalidParameterException("commandName must not be empty");
             if (type.equals(""))
-                throw new InvalidParameterException("type must not be empty");
+                throw new InvalidParameterException("species must not be empty");
         } catch (JSONException e) {
             throw new InvalidParameterException("Creature object cannot be created: invalid json structure\n");
         }
@@ -58,7 +58,7 @@ public class Creature implements CreatureInt{
         if (line.length!=9){
             throw new InvalidParameterException("Number of objects must be 9");
         }/*
-        "key","name","age","height","type","isLive","x","y","z"
+        "key","commandName","age","height","species","isLive","x","y","z"
         */
         try {
             name = line[1];
@@ -72,9 +72,9 @@ public class Creature implements CreatureInt{
             if(height<=0)
                 throw new InvalidParameterException("height must be greater than zero");
             if (name.equals(""))
-                throw new InvalidParameterException("name must not be empty");
+                throw new InvalidParameterException("commandName must not be empty");
             if (type.equals(""))
-                throw new InvalidParameterException("type must not be empty");
+                throw new InvalidParameterException("species must not be empty");
         }catch (Exception e){
             throw new InvalidParameterException("Object parameters are wrong: " + e.getMessage());
         }
@@ -113,7 +113,7 @@ public class Creature implements CreatureInt{
 
     @Override
     public String toString() {
-        return String.format("name: %s; age: %d;", name, age);
+        return String.format("commandName: %s; age: %d;", name, age);
     }
 
     @Override

@@ -103,7 +103,7 @@ public class Command implements Serializable {
     public String executeCommand(CreatureMap creatureMap, String fileName, String charsetName) throws FileSavingException, InvalidParameterException{
 
 
-//        if ((creatureMap == null) && (!name.equals("help")) && (!name.equals("load")) && (!name.equals("import")))
+//        if ((creatureMap == null) && (!commandName.equals("help")) && (!commandName.equals("load")) && (!commandName.equals("import")))
 //            throw new InvalidParameterException("Collection not loaded. To load, use the load or import:\n" + Commands.LOAD.man());
 
         switch (name) {

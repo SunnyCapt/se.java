@@ -86,7 +86,7 @@ public class Client implements Runnable {
 
     private void printResp(Object obj) throws RequestException {
         if (!(obj instanceof String)) {
-            throw new RequestException("server sent an unknown type object \n");
+            throw new RequestException("server sent an unknown species object \n");
         } else {
             System.out.println("\n[from server]:" + obj);
         }

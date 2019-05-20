@@ -63,7 +63,7 @@ public class CommandUtils {
     public static Command readCommand(InputStream inputStream) throws IOException, ClassNotFoundException, InterruptedException, StreamCorruptedException {
         Object obj = IOTools.readObject(inputStream);//new ObjectInputStream(inputStream)
         if (!(obj instanceof Command)) {
-            throw new RequestException(" send me only Command type objects!\n");
+            throw new RequestException(" send me only Command species objects!\n");
         }
         return (Command) obj;
     }

@@ -55,7 +55,7 @@ abstract public class Creature implements CreatureInt, LocationInt{
 
     @Override
     public String toString() {
-        return String.format("name: %s; age: %d;", name, age);
+        return String.format("commandName: %s; age: %d;", name, age);
     }
 
     @Override

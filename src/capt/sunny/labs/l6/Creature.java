@@ -71,10 +71,10 @@ public class Creature implements CreatureInt, Comparable , Serializable {
             } catch (IllegalArgumentException e) {
                 throw new InvalidParameterException("Creature object cannot be created: wrong time parameter, use pattern like this: \n" + new Date().toGMTString());
             }
-            name = jsonObject.getString("name");
+            name = jsonObject.getString("commandName");
             age = jsonObject.getInt("age");
             height = jsonObject.getDouble("height");
-            type = jsonObject.getString("type");
+            type = jsonObject.getString("species");
             isLive = jsonObject.getBoolean("isLive");
             location = new Point(jsonObject.getJSONObject("location"));
             setSize();
@@ -89,7 +89,7 @@ public class Creature implements CreatureInt, Comparable , Serializable {
         if (line.length != 10 && line.length != 9) {
             throw new InvalidParameterException("Number of objects must be 9");
         }/*
-        "key","name","age","height","type","isLive","x","y","z"
+        "key","commandName","age","height","species","isLive","x","y","z"
         */
         try {
             name = line[1];
@@ -124,9 +124,9 @@ public class Creature implements CreatureInt, Comparable , Serializable {
         if (height <= 0)
             throw new InvalidParameterException("height must be greater than zero");
         if (name.equals(""))
-            throw new InvalidParameterException("name must not be empty");
+            throw new InvalidParameterException("commandName must not be empty");
         if (type.equals(""))
-            throw new InvalidParameterException("type must not be empty");
+            throw new InvalidParameterException("species must not be empty");
     }
 
     public String getType() {
@@ -200,7 +200,7 @@ public class Creature implements CreatureInt, Comparable , Serializable {
     }
 
     public String toString() {
-        return String.format("\n\ttype: %s\n\tname: %s\n\tage: %s\n\thieght: %s\n\tisLive: %s\n\tlocation: %s\n\tsize: %s\n\tcreation date: %s\n", type, name, String.valueOf(age), String.valueOf(height), String.valueOf(isLive), location.toString(), String.valueOf(size), creationDate.toInstant());
+        return String.format("\n\tspecies: %s\n\tcommandName: %s\n\tage: %s\n\thieght: %s\n\tisLive: %s\n\tlocation: %s\n\tsize: %s\n\tcreation date: %s\n", type, name, String.valueOf(age), String.valueOf(height), String.valueOf(isLive), location.toString(), String.valueOf(size), creationDate.toInstant());
     }
 
     @Override

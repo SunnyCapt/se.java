@@ -16,10 +16,10 @@ public class Command {
                     "\t       \"key\":\"key0\"\n" +
                     "\t      } {\n" +
                     "\t         \"element\":{\n" +
-                    "\t                   \"name\":\"name3\",\n" +
+                    "\t                   \"commandName\":\"name3\",\n" +
                     "\t                   \"age\":270,\n" +
                     "\t                   \"height\":345.34,\n" +
-                    "\t                   \"type\":\"human\",\n" +
+                    "\t                   \"species\":\"human\",\n" +
                     "\t                   \"isLive\":true,\n" +
                     "\t                   \"location\":{\n" +
                     "\t                           \"x\":23.23,\n" +
@@ -33,10 +33,10 @@ public class Command {
             "\nadd_if_min {element};\n\tдобавить новый элемент в коллекцию, если его значение\n\tменьше, чем у наименьшего элемента этой коллекции(сравнение по возрасту)\n\tпример:" +
                     "\n\tadd_if_min {\n" +
                     "\t             \"element\":{\n" +
-                    "\t                   \"name\":\"name3\",\n" +
+                    "\t                   \"commandName\":\"name3\",\n" +
                     "\t                   \"age\":270,\n" +
                     "\t                   \"height\":345.34,\n" +
-                    "\t                   \"type\":\"human\",\n" +
+                    "\t                   \"species\":\"human\",\n" +
                     "\t                   \"isLive\":true,\n" +
                     "\t                   \"location\":{\n" +
                     "\t                           \"x\":23.23,\n" +

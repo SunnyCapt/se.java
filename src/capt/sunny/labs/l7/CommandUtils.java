@@ -1,16 +1,10 @@
 package capt.sunny.labs.l7;
 
-import capt.sunny.labs.l7.Command;
-import capt.sunny.labs.l7.Commands;
-import capt.sunny.labs.l7.IOTools;
-import capt.sunny.labs.l7.RequestException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StreamCorruptedException;
 import java.security.InvalidParameterException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -18,7 +12,7 @@ public class CommandUtils {
 
 
 
-    public static capt.sunny.labs.l7.Command getCommand(String commandLine) throws IOException {
+    public static Command getCommand(String commandLine, User user) throws IOException {
         int indexOfSecondParameter = -1;
         int indexOfFirstParameter = -1;
         boolean i = true;
@@ -36,15 +30,15 @@ public class CommandUtils {
                 i = !i;
             preChar = c;
         }
-        return new capt.sunny.labs.l7.Command(
+        return CommandParser.parse(
                 indexOfFirstParameter == -1 ? commandLine.replace(" ", "") : commandLine.substring(0, indexOfFirstParameter).replace(" ", ""),
                 indexOfFirstParameter == -1 ? null : indexOfSecondParameter == -1 ? commandLine.substring(indexOfFirstParameter) : commandLine.substring(indexOfFirstParameter, indexOfSecondParameter),
-                indexOfSecondParameter == -1 ? null : commandLine.substring(indexOfSecondParameter)
+                indexOfSecondParameter == -1 ? null : commandLine.substring(indexOfSecondParameter), user
         );
 
     }
 
-    public static capt.sunny.labs.l7.Command readCommand(BufferedReader bufferedReader) throws IOException {
+    public static Command readCommand(BufferedReader bufferedReader, User user) throws IOException {
         String multilineCommand = IOTools.getMultiline(bufferedReader);
         int indexOfFullCommandName = multilineCommand.lastIndexOf("\n");
         String commandLine = multilineCommand.substring(0, indexOfFullCommandName);
@@ -52,7 +46,7 @@ public class CommandUtils {
         if (commandLine.equals("")) {
             throw new InvalidParameterException("Enter command\n");
         }
-        capt.sunny.labs.l7.Command command = CommandUtils.getCommand(commandLine);
+        Command command = CommandUtils.getCommand(commandLine, user);
         if (!(commandName.startsWith(command.getName()))) {
             throw new InvalidParameterException("command not found\n");
         }
@@ -68,7 +62,7 @@ public class CommandUtils {
     public static capt.sunny.labs.l7.Command readCommand(InputStream inputStream) throws IOException, ClassNotFoundException, InterruptedException, StreamCorruptedException {
         Object obj = IOTools.readObject(inputStream);//new ObjectInputStream(inputStream)
         if (!(obj instanceof capt.sunny.labs.l7.Command)) {
-            throw new RequestException(" send me only Command type objects!\n");
+            throw new RequestException(" send me only Command species objects!\n");
         }
         return (Command) obj;
     }

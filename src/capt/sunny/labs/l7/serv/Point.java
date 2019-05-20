@@ -20,6 +20,12 @@ public class Point implements PointInt {
         z = _parameters[2];
     }
 
+    public Point(Double[] _parameters) {
+        x = _parameters[0];
+        y = _parameters[1];
+        z = _parameters[2];
+    }
+
     public Point(JSONObject jsonObject) {
         x = jsonObject.getDouble("x");
         y = jsonObject.getDouble("y");

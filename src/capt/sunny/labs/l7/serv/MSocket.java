@@ -1,10 +1,7 @@
 package capt.sunny.labs.l7.serv;
 
 import capt.sunny.labs.l7.*;
-import capt.sunny.labs.l7.serv.AnswerMSocket;
-import capt.sunny.labs.l7.serv.Server;
 
-import javax.jws.soap.SOAPBinding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -12,7 +9,6 @@ import java.io.StreamCorruptedException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.InvalidParameterException;
-import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,7 +20,7 @@ import java.util.concurrent.Executors;
  */
 public class MSocket implements Runnable {
 
-    protected CreatureMap creatureMap;
+    protected DataManager dataManager;
     private String fileName;
     private String message;
     private Socket client = null;
@@ -37,11 +33,11 @@ public class MSocket implements Runnable {
     /**
      * @param _client - Socket obj which you can get by <code>serverSocket.accept();</code>
      */
-    MSocket(Socket _client, CreatureMap _creatureMap) {
+    MSocket(Socket _client, DataManager _dataManager) {
         try {
             fileName = Server.config.getString("full_path_to_file");//full path to the file
             this.client = _client;
-            this.creatureMap = _creatureMap;
+            this.dataManager = _dataManager;
         } catch (Exception e) {
             System.out.println("\nCan not create new connection(MSocket)");
         }
@@ -117,7 +113,7 @@ public class MSocket implements Runnable {
     }
 
     private void createAnswerThread(ObjectOutputStream oos) throws Exception {
-        Thread answerThread = new Thread(new AnswerMSocket(command, creatureMap, oos, fileName, exception, user));
+        Thread answerThread = new Thread(new AnswerMSocket(command, dataManager, oos, exception, user));
         answerThread.start();
         answerThread.interrupt();
         check();

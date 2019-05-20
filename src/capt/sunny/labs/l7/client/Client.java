@@ -1,9 +1,7 @@
 package capt.sunny.labs.l7.client;
 
-import capt.sunny.labs.l7.Command;
-import capt.sunny.labs.l7.CommandUtils;
-import capt.sunny.labs.l7.IOTools;
-import capt.sunny.labs.l7.RequestException;
+import capt.sunny.labs.l7.*;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -11,14 +9,21 @@ import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
-import java.util.Map;
 import java.util.NoSuchElementException;
+
+
+enum AuthStatus {
+    OK,
+    NOT_LOGGED_IN,
+    LOGGING;
+}
 
 public class Client implements Runnable {
     private String HOST = "localhost";
     private int PORT = -1;
     private String message = "";
     private SocketChannel channel = null;
+    private User me = new User();
 
 
     public Client(Runtime runtime) {
@@ -26,7 +31,7 @@ public class Client implements Runnable {
             try {
                 Thread.sleep(1);
                 try {
-                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save"), Command.class.getName());
+                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save", me), Command.class.getName());
                     message = "\nAll saved";
                 } catch (Exception e2) {
                     message = "\nDidt save, sorry";
@@ -45,7 +50,7 @@ public class Client implements Runnable {
             try {
                 Thread.sleep(1);
                 try {
-                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save"), Command.class.getName());
+                    IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save", me), Command.class.getName());
                     message = "\nAll saved";
                 } catch (Exception e2) {
                     message = "\nDidt save, sorry";
@@ -76,10 +81,26 @@ public class Client implements Runnable {
     }
 
 
-    private void printResp(Object obj) throws RequestException {
+    private void checkAndPrintResp(Object obj, Status status, User user) throws RequestException {
         if (!(obj instanceof String)) {
-            throw new RequestException("server sent an unknown type object \n");
+            throw new RequestException("server sent an unknown species object \n");
         } else {
+            if (status.is_LOGGING()) {
+                System.out.println(obj);
+                try {
+                    JSONObject tempJSON = new JSONObject((String) obj);
+                    obj = tempJSON.getString("message");
+                    user.setNick(tempJSON.getString("nick")==" "?null:tempJSON.getString("nick"));
+                    user.updateToken(tempJSON.getString("token")==" "?null:tempJSON.getString("token"));
+                } catch (Exception c) {
+                    obj = c.getMessage();
+                }
+                if (((String) obj).contains("Wrong login/password")) {
+                    status.do_NOT_LOGGED_IN();
+                }else{
+                    status.do_OK();
+                }
+            }
             System.out.println("\n[from server]:" + obj);
         }
     }
@@ -89,6 +110,7 @@ public class Client implements Runnable {
     public void run() {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             System.out.print("Sign of the end of the command - ';'\n\n");
+            Status status = new Status();
             main_cycle:
             while (true) {
                 message = "";
@@ -102,14 +124,16 @@ public class Client implements Runnable {
 
                             System.out.print(">>> ");
 
-                            Command command = CommandUtils.readCommand(bufferedReader);
-                            // IOTools.<Command>sendObject(channel, CommandUtils.getCommand("save"), Command.class.getName());
+                            Command command = CommandUtils.readCommand(bufferedReader, me);
+                            if (command.getName().equals("login")) status.do_LOGGING();
+
                             IOTools.<Command>sendObject(channel, command, Command.class.getName());
                             Object obj = IOTools.readObject(ois, true);
-                            printResp(obj);
 
-                            if (checkCommand(command))
-                                throw new IOException(" you are disconnected from the server\n");
+                            if (command.getName().equals("exit")) throw new IOException(" you are disconnected from the server\n");
+
+                            checkAndPrintResp(obj, status, me);
+
 
                         } catch (RequestException | StreamCorruptedException e) {
                             System.out.println("\n[local] Invalid server response: " + e.getMessage());
@@ -157,15 +181,52 @@ public class Client implements Runnable {
 
     }
 
+
     private void exit(String message) {
         if (!message.isEmpty())
             System.out.println(message);
         System.exit(0);
     }
 
-    private boolean checkCommand(Command command) {
-        return command.getName().equals("exit");
+
+
+}
+
+class Status {
+    private AuthStatus status = AuthStatus.NOT_LOGGED_IN;
+
+    public AuthStatus getStatus() {
+        return status;
     }
+
+    public void setStatus(AuthStatus _status) {
+        status = _status;
+    }
+
+    public boolean is_OK() {
+        return status == AuthStatus.OK;
+    }
+
+    public boolean is_NOT_LOGGED_IN() {
+        return status == AuthStatus.NOT_LOGGED_IN;
+    }
+
+    public boolean is_LOGGING() {
+        return status == AuthStatus.LOGGING;
+    }
+
+    public void do_OK() {
+        status = AuthStatus.OK;
+    }
+
+    public void do_NOT_LOGGED_IN() {
+        status = AuthStatus.NOT_LOGGED_IN;
+    }
+
+    public void do_LOGGING() {
+        status = AuthStatus.LOGGING;
+    }
+
 
 }
 

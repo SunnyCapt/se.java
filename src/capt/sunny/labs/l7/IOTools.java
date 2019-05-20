@@ -1,9 +1,5 @@
 package capt.sunny.labs.l7;
 
-import capt.sunny.labs.l7.CreatureMap;
-import capt.sunny.labs.l7.RequestException;
-import capt.sunny.labs.l7.Wrapper;
-import capt.sunny.labs.l7.WrapperUtils;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -115,30 +111,30 @@ public class IOTools {
         return fileLines;
     }
 
-    public static CreatureMap getCreatureMapFromFile(String fileName, String charsetName) {
-        CreatureMap creatureMap = new CreatureMap();
-
-
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(fileName), charsetName)) {
-            List<String[]> fileLines = IOTools.readFile(reader, fileName);
-            if (!fileLines.isEmpty()) {
-                boolean isLastLineEmpty = (fileLines.get(fileLines.size() - 1)[0].length() == 0) && (fileLines.get(fileLines.size() - 1)[1] == null);
-                if (isLastLineEmpty)
-                    fileLines.remove(fileLines.size() - 1);
-                creatureMap = new CreatureMap(fileLines);
-            }
-        } catch (FileNotFoundException e) {
-            throw new InvalidParameterException(String.format("Can't read \"%s\"", fileName));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.exit(-1);
-        } catch (InvalidParameterException e) {
-            System.out.println("Failed to load objects: " + e.getMessage());
-            System.exit(-1);
-        }
-
-        return creatureMap;
-    }
+//    public static CreatureMap getCreatureMapFromFile(String fileName, String charsetName) {
+//        CreatureMap creatureMap = new CreatureMap();
+//
+//
+//        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(fileName), charsetName)) {
+//            List<String[]> fileLines = IOTools.readFile(reader, fileName);
+//            if (!fileLines.isEmpty()) {
+//                boolean isLastLineEmpty = (fileLines.get(fileLines.size() - 1)[0].length() == 0) && (fileLines.get(fileLines.size() - 1)[1] == null);
+//                if (isLastLineEmpty)
+//                    fileLines.remove(fileLines.size() - 1);
+//                creatureMap = new CreatureMap(fileLines);
+//            }
+//        } catch (FileNotFoundException e) {
+//            throw new InvalidParameterException(String.format("Can't read \"%s\"", fileName));
+//        } catch (IOException e) {
+//            System.out.println(e.getMessage());
+//            System.exit(-1);
+//        } catch (InvalidParameterException e) {
+//            System.out.println("Failed to load objects: " + e.getMessage());
+//            System.exit(-1);
+//        }
+//
+//        return creatureMap;
+//    }
 
     public static String getCSVQuotes(String src) {
 //        StringBuilder sb = new StringBuilder(src);

@@ -16,11 +16,10 @@ public enum Commands {
 //            "\n\tSet file with data (from server)\n",  new String[]{"fileName"}),
     SAVE("\nsave;\n\tсохранить коллекцию в файл\n", new String[]{}),
     HELP("\nhelp;\n\tпоказать этот текст\n", new String[]{}),
-    INSERT("\ninsert {String name} {details};\n\tдобавить новое существо с заданным именем\n\tпример:" +
-            "\n\tinsert{\n" +
-            "\t       \"name\":\"name0\"\n" +
-            "\t      } {\n" +
-            "\t         \"details\":{\n" +
+    INSERT("\ninsert {creature};\n\tдобавить новое существо с заданным именем\n\tпример:" +
+            "\n\tinsert {\n" +
+            "\t            \"creature\":{\n" +
+            "\t                   \"name\":\"name0\",\n" +
             "\t                   \"age\":270,\n" +
             "\t                   \"height\":345.34,\n" +
             "\t                   \"species\":\"human\",\n" +
@@ -32,10 +31,11 @@ public enum Commands {
             "\t                           \"z\":25.2\n" +
             "\t                          }\n" +
             "\t                   }\n" +
-            "\t          };\n", new String[]{"name", "details"}),
+            "\t         };\n", new String[]{"creature"}),
     ADD_IF_MIN("\nadd_if_min {details};\n\tдобавить новое существо в коллекцию, если его значение\n\tменьше, чем у наименьшего существа этой коллекции(сравнение по возрасту)\n\tпример:" +
             "\n\tadd_if_min {\n" +
-            "\t             \"details\":{\n" +
+            "\t              \"creature\":{\n" +
+            "\t                   \"name\":\"name0\",\n" +
             "\t                   \"age\":270,\n" +
             "\t                   \"height\":345.34,\n" +
             "\t                   \"species\":\"human\",\n" +
@@ -47,7 +47,7 @@ public enum Commands {
             "\t                           \"z\":25.2\n" +
             "\t                          }\n" +
             "\t                   }\n" +
-            "\t             };\n", new String[]{"details"}),
+            "\t             };\n", new String[]{"creature"}),
     REMOVE_LOWER("\nremove_lower {String name}; удалить из коллекции всех существ, имена которых меньше, чем заданный\n\tпример:" +
             "\n\tremove_lower{\n" +
             "\t              \"name\":\"name0\"\n" +
@@ -58,7 +58,7 @@ public enum Commands {
             "\t      }\n", new String[]{"name"}),
     LOGIN("\nlogin {String nick} {String password};\n\tавторизация\n\tпример: " +
             "\n\tlogin{\n" +
-            "\t       \"nick\":\"Ivan\"\n" +
+            "\t       \"nick\":\"Ivan_Alexander\"\n" +
             "\t      } {\n" +
             "\t       \"password\":\"STupID STudeNt mUSt Die\"\n" +
             "\t      }\n", new String[]{"nick", "password"});

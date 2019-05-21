@@ -12,11 +12,7 @@ import java.security.InvalidParameterException;
 import java.util.NoSuchElementException;
 
 
-enum AuthStatus {
-    OK,
-    NOT_LOGGED_IN,
-    LOGGING;
-}
+
 
 public class Client implements Runnable {
     private String HOST = "localhost";
@@ -108,7 +104,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
             System.out.print("Sign of the end of the command - ';'\n\n");
             Status status = new Status();
             main_cycle:
@@ -124,7 +120,7 @@ public class Client implements Runnable {
 
                             System.out.print(">>> ");
 
-                            Command command = CommandUtils.readCommand(bufferedReader, me);
+                            Command command = CommandUtils.readCommand(reader, me);
                             if (command.getName().equals("login")) status.do_LOGGING();
 
                             IOTools.<Command>sendObject(channel, command, Command.class.getName());
@@ -149,7 +145,7 @@ public class Client implements Runnable {
                         System.out.println("\nNo server connection\nEnter host and port, example: 127.0.0.10:1337\n");
                         connection_cycle:
                         while (true) {
-                            String hostPort = bufferedReader.readLine().trim();
+                            String hostPort = reader.readLine().trim();
                             if (!"exit".equals(hostPort)) {
                                 String[] data = hostPort.split(":");
                                 if (data.length == 2) {
@@ -192,43 +188,6 @@ public class Client implements Runnable {
 
 }
 
-class Status {
-    private AuthStatus status = AuthStatus.NOT_LOGGED_IN;
-
-    public AuthStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AuthStatus _status) {
-        status = _status;
-    }
-
-    public boolean is_OK() {
-        return status == AuthStatus.OK;
-    }
-
-    public boolean is_NOT_LOGGED_IN() {
-        return status == AuthStatus.NOT_LOGGED_IN;
-    }
-
-    public boolean is_LOGGING() {
-        return status == AuthStatus.LOGGING;
-    }
-
-    public void do_OK() {
-        status = AuthStatus.OK;
-    }
-
-    public void do_NOT_LOGGED_IN() {
-        status = AuthStatus.NOT_LOGGED_IN;
-    }
-
-    public void do_LOGGING() {
-        status = AuthStatus.LOGGING;
-    }
-
-
-}
 
 
 

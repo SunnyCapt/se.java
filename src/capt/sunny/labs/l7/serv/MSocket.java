@@ -27,7 +27,8 @@ public class MSocket implements Runnable {
     private final Exception[] exception = {null};
     private Command command = null;
     private User[] user = new User[1];
-    private ExecutorService executeIt = Executors.newFixedThreadPool(capt.sunny.labs.l7.serv.Server.getNumberOfAllowedRequests()); //5 is number of allowed requests
+    //private Status status = new Status();
+    private ExecutorService executeIt = Executors.newFixedThreadPool(Server.getNumberOfAllowedRequests()); //5 is number of allowed requests
 
 
     /**

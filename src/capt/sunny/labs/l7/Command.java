@@ -87,21 +87,16 @@ class CommandParser {
                 JSONObject tempObj = new JSONObject(rawFirstParameter);
                 if (tempObj.has("name") && commandParameters[0].equals("name")) {
                     firstParameter = tempObj.getString("name");
-                } else if (tempObj.has("details") && commandParameters[0].equals("details")) {
-                    tempObj = new JSONObject(rawFirstParameter).getJSONObject("details");
-                    object = new Creature(tempObj, user.getNick());
+                } else if (tempObj.has("creature") && commandParameters[0].equals("creature")) {
+                    object = new Creature(new JSONObject(rawFirstParameter).getJSONObject("creature"), user.getNick());
                 } else if (tempObj.has("nick") && commandParameters[0].equals("nick")) {
                     firstParameter = tempObj.getString("nick");
                 } else {
                     throw new InvalidParameterException("\nWrong parameters for: " + commandName + "\n");
                 }
                 if (commandParameters.length == 2) {
-                    if (commandParameters[1].equals("details")) {
-                        tempObj = new JSONObject(rawSecondParameter);
-                        tempObj.put("name", firstParameter);
-                        object = new Creature(tempObj.getJSONObject("details"), user.getNick());
-                    } else if (commandParameters[1].equals("password")) {
-                        tempObj = new JSONObject(rawSecondParameter);
+                    tempObj = new JSONObject(rawSecondParameter);
+                    if (tempObj.has("password") && commandParameters[1].equals("password")) {
                         secondParameter = tempObj.getString("password");
                     } else {
                         throw new InvalidParameterException("\nWrong parameters for: " + commandName + "\n");

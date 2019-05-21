@@ -79,7 +79,7 @@ public class DataManager implements Serializable, AutoCloseable {
      * @param owner String имя юзера отправившего запрос
      * @throws FileSavingException выбрасывается в случае, если не удается сохранить файл
      */
-    public void save(String owner) throws FileSavingException {
+    public void save(String owner) throws DBException {
         String pattern = " UPDATE s278068_objects\n" +
                 "\tSET %s\n" +
                 "\tWHERE name='%s'; ";
@@ -91,7 +91,7 @@ public class DataManager implements Serializable, AutoCloseable {
                 db.request(req.toString(), DBActionType.UPDATE);
                 lastHashCode = hashCode();
             } catch (DBException e) {
-                e.printStackTrace();
+                throw new DBException("Cannt save collection, sorry: " + e.getMessage());
             }
 
         }
@@ -123,11 +123,14 @@ public class DataManager implements Serializable, AutoCloseable {
      *
      * @param name String ключ удаляемого элемента
      */
-    public void remove(String name) {
+    public void remove(String name, String owner) {
         if (map.keySet().contains(name)) {
-            map.remove(name);
+            if (map.get(name).getOwnerNick().equals(owner))
+                map.remove(name);
+            else
+                throw new InvalidParameterException("Cannt remove it. This creature does not belong to you !!");
         } else {
-            throw new InvalidParameterException("Нет объекта с таким ключем");
+            throw new InvalidParameterException("No creature with that name");
         }
     }
 
@@ -146,8 +149,8 @@ public class DataManager implements Serializable, AutoCloseable {
      *
      * @param name String имя для сравнений
      */
-    public void remove_lower(String name) {
-        map.entrySet().stream().filter(e -> name.compareTo(e.getKey()) > 0).forEach(e -> remove(e.getKey()));
+    public void remove_lower(String name, String owner) {
+        map.entrySet().stream().filter(e -> name.compareTo(e.getKey()) > 0).forEach(e -> remove(e.getKey(), owner));
     }
 
     public void copyCollectionOf(DataManager _dataManager) {

@@ -9,6 +9,7 @@ import javax.security.auth.login.LoginException;
 public class User {
     private String nick = null;
     private String token = null;
+    private long tokenCreationTime = 0;
 
     public User(String _nick, String _token) {
         nick = _nick;
@@ -20,6 +21,7 @@ public class User {
 
     public void updateToken(String _token){
         token = _token;
+        tokenCreationTime = System.currentTimeMillis() / 1000L;
     }
 
     public void setNick(String _nick){
@@ -54,6 +56,10 @@ public class User {
     @Override
     public int hashCode() {
         return (int) nick.chars().mapToDouble(c -> c * 2.27).sum();
+    }
+
+    public boolean isTokenValid() {
+        return ((System.currentTimeMillis() / 1000L) - tokenCreationTime ) > 150;
     }
 }
 

@@ -2,6 +2,7 @@ package capt.sunny.labs.l7.serv;
 
 import capt.sunny.labs.l7.Command;
 import capt.sunny.labs.l7.Commands;
+import capt.sunny.labs.l7.serv.db.DBException;
 import org.json.JSONException;
 
 import javax.security.auth.login.LoginException;
@@ -13,8 +14,7 @@ public class CommandExecutor {
 
     public static String execute(DataManager dataManager, Command command, String charsetName) throws FileSavingException, InvalidParameterException {
 
-        if (command.getName().equals("show"))
-            System.out.println();
+
         if ((command.getUserName() == null || command.getToken() == null || command.getUserName().equals(" ") || command.getToken().equals(" ") )  && !command.getName().equals("login") && !command.getName().equals("help"))
             return "\nYou are not logged in, please use the login \ncommand for it. (see manual with help command)";
 
@@ -44,8 +44,12 @@ public class CommandExecutor {
             case "show":
                 return dataManager.show();
             case "save":
-                dataManager.save(command.getName());
-                return "\nFile saved\n";
+                try {
+                    dataManager.save(command.getUserName());
+                    return "File saved";
+                }catch (DBException e) {
+                    return e.getMessage();
+                }
             case "add_if_min":
                 try {
                     dataManager.add_if_min(command.getObject());
@@ -59,9 +63,11 @@ public class CommandExecutor {
                 }
             case "remove":
                 try {
-                    dataManager.remove(command.getFirstParameter());
+                    dataManager.remove(command.getFirstParameter(), command.getUserName());
                     return "item removed";
-                } catch (JSONException e) {
+                } catch (InvalidParameterException e){
+                    return e.getMessage();
+                }catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
                 } catch (NullPointerException e) {
                     throw new InvalidParameterException("Specify the name of the object to be deleted.\n");
@@ -70,7 +76,7 @@ public class CommandExecutor {
                 return dataManager.info();
             case "remove_lower":
                 try {
-                    dataManager.remove_lower(command.getFirstParameter());
+                    dataManager.remove_lower(command.getFirstParameter(), command.getUserName());
                     return "all lower items removed";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
@@ -81,10 +87,10 @@ public class CommandExecutor {
                 return Commands.help();
             case "exit":
                 try {
-                    dataManager.save(charsetName);
+                    dataManager.save(command.getUserName());
                     return "File saved, bye...";
-                } catch (FileSavingException ignored) {
-                    return "File didnt save, sorry, bye...";
+                }catch (DBException e) {
+                    return e.getMessage();
                 }
             default:
                 throw new InvalidParameterException("not found");

@@ -14,10 +14,7 @@ import java.security.InvalidParameterException;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -105,16 +102,19 @@ public class DataManager implements Serializable, AutoCloseable {
      * @param element Creature рассматрвиаемый элемент
      */
 
-    public void add_if_min(Creature element) {
+    public boolean add_if_min(Creature element) {
+        boolean result = false;
         if (map.isEmpty()) {
-            map.put(String.valueOf(element.hashCode()), element);
+            map.put(element.getName(), element);
+            result =true;
         } else {
-            if (element.compareTo(map.entrySet().stream()
-                    .min(comparator).get().getValue()) < 0) {
-
+            if (element.compareTo(map.entrySet().stream().min(comparator).get().getValue()) < 0) {
                 map.put(String.valueOf(element.hashCode()), element);
+                result=true;
             }
         }
+        return result;
+
     }
 
     /**
@@ -273,16 +273,27 @@ public class DataManager implements Serializable, AutoCloseable {
 }
 
 
-class SUserUtils{
-    public static User login(String _login, String _password, DataManager dataManager) throws LoginException {
+class SUserUtils {
+    static String CHARACTERS = "?!#$%&'()*+,-.0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+    public static String login(String _login, String _password, DataManager dataManager) throws LoginException {
         try {
-            Object result = dataManager.getOneDBFild("SELECT user_name FROM s278068_users WHERE user_name='"+_login+"' and upassword='"+_password+"'; ");
-            if (result!=null)
-                return new User(_login, _password);
+            Object result = dataManager.getOneDBFild("SELECT user_name FROM s278068_users WHERE user_name='" + _login + "' and upassword='" + _password + "'; ");
+            if (result != null)
+                return getRandomToken();
             else
                 throw new LoginException("Wrong login/password");
         } catch (DBException e) {
             throw new LoginException("Cannt login: " + e.getMessage());
         }
+    }
+
+    private static String getRandomToken() {
+        char[] text = new char[32];
+        Random random = new Random();
+        for (int i = 0; i < 32; i++) {
+            text[i] = CHARACTERS.charAt(random.nextInt(CHARACTERS.length()));
+        }
+        return new String(text);
     }
 }

@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -20,9 +21,11 @@ public class Client implements Runnable {
     private String message = "";
     private SocketChannel channel = null;
     private User me = new User();
+    private BufferedReader reader;
 
 
-    public Client(Runtime runtime) {
+    public Client(Runtime runtime, BufferedReader _reader) {
+        reader = _reader;
         runtime.addShutdownHook(new Thread(() -> {
             try {
                 Thread.sleep(1);
@@ -31,17 +34,16 @@ public class Client implements Runnable {
                     message = "\nAll saved";
                 } catch (Exception e2) {
                     message = "\nDidt save, sorry";
-                    e2.printStackTrace();
                 }
                 System.out.println(message);
                 System.out.println("\nBye, kitty!");
             } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }));
     }
 
-    public Client(Runtime runtime, String _HOST, int _PORT) {
+    public Client(Runtime runtime, String _HOST, int _PORT, BufferedReader _reader) {
+        reader = _reader;
         runtime.addShutdownHook(new Thread(() -> {
             try {
                 Thread.sleep(1);
@@ -62,8 +64,7 @@ public class Client implements Runnable {
     }
 
     public static void main(String[] args) {
-
-        new Client(Runtime.getRuntime()).run();
+        new Client(Runtime.getRuntime(), new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))).run();
     }
 
 
@@ -82,12 +83,11 @@ public class Client implements Runnable {
             throw new RequestException("server sent an unknown species object \n");
         } else {
             if (status.is_LOGGING()) {
-                System.out.println(obj);
                 try {
                     JSONObject tempJSON = new JSONObject((String) obj);
                     obj = tempJSON.getString("message");
-                    user.setNick(tempJSON.getString("nick")==" "?null:tempJSON.getString("nick"));
-                    user.updateToken(tempJSON.getString("token")==" "?null:tempJSON.getString("token"));
+                    user.setNick(tempJSON.getString("nick")==""?null:tempJSON.getString("nick"));
+                    user.updateToken(tempJSON.getString("token")==""?null:tempJSON.getString("token"));
                 } catch (Exception c) {
                     obj = c.getMessage();
                 }
@@ -104,7 +104,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
+        try  {
             System.out.print("Sign of the end of the command - ';'\n\n");
             Status status = new Status();
             main_cycle:
@@ -124,9 +124,8 @@ public class Client implements Runnable {
                             if (command.getName().equals("login")) status.do_LOGGING();
 
                             IOTools.<Command>sendObject(channel, command, Command.class.getName());
-                            Object obj = IOTools.readObject(ois, true);
-
                             if (command.getName().equals("exit")) throw new IOException(" you are disconnected from the server\n");
+                            Object obj = IOTools.readObject(ois, true);
 
                             checkAndPrintResp(obj, status, me);
 

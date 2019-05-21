@@ -15,7 +15,7 @@ public class CommandExecutor {
     public static String execute(DataManager dataManager, Command command, String charsetName) throws FileSavingException, InvalidParameterException {
 
 
-        if ((command.getUserName() == null || command.getToken() == null || command.getUserName().equals(" ") || command.getToken().equals(" ") )  && !command.getName().equals("login") && !command.getName().equals("help"))
+        if ((command.getUserName() == null || command.getToken() == null || command.getUserName().equals("") || command.getToken().equals("") )  && !command.getName().equals("login") && !command.getName().equals("help"))
             return "\nYou are not logged in, please use the login \ncommand for it. (see manual with help command)";
 
         switch (command.getName()) {
@@ -23,12 +23,12 @@ public class CommandExecutor {
                 String patt = "{\"nick\":\"%s\", \"token\":\"%s\", \"message\":\"%s\"}";
                 try {
                     return String.format(patt,
-                            command.getUserName(),
-                            SUserUtils.login(command.getFirstParameter(), command.getSecondParameter(), dataManager).getToken(),
+                            command.getFirstParameter(),
+                            SUserUtils.login(command.getFirstParameter(), command.getSecondParameter(), dataManager),
                             String.format("Hello %s. You haven't been in street racing for a long time!", command.getFirstParameter())
                     );
                 } catch (LoginException e) {
-                    return String.format(patt," "," ",e.getMessage());
+                    return String.format(patt,"","",e.getMessage());
                 }
             case "insert":
                 try {
@@ -52,8 +52,7 @@ public class CommandExecutor {
                 }
             case "add_if_min":
                 try {
-                    dataManager.add_if_min(command.getObject());
-                    return "";
+                    return dataManager.add_if_min(command.getObject())?"Item not added":"Item not added";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
                 } catch (NullPointerException e) {
@@ -64,7 +63,7 @@ public class CommandExecutor {
             case "remove":
                 try {
                     dataManager.remove(command.getFirstParameter(), command.getUserName());
-                    return "item removed";
+                    return "Item removed";
                 } catch (InvalidParameterException e){
                     return e.getMessage();
                 }catch (JSONException e) {

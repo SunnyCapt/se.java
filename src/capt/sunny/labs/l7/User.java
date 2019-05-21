@@ -59,7 +59,7 @@ public class User {
     }
 
     public boolean isTokenValid() {
-        return ((System.currentTimeMillis() / 1000L) - tokenCreationTime ) > 150;
+        return ((System.currentTimeMillis() / 1000L) - tokenCreationTime ) < 150;
     }
 }
 

@@ -7,7 +7,7 @@
 
 
 # Programming lab №5
-![image](data/task5.png)
+![image](data/tasks/task5.png)
 
 - in console:
     
@@ -19,4 +19,9 @@
 
 
 # Programming lab №6
-![image](data/task6.jpg)
+![image](data/tasks/task6.jpg)
+
+
+
+# Programming lab №7
+![image](data/tasks/task7.jpg)

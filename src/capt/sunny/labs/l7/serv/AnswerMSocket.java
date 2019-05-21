@@ -3,6 +3,7 @@ package capt.sunny.labs.l7.serv;
 import capt.sunny.labs.l7.Command;
 import capt.sunny.labs.l7.IOTools;
 import capt.sunny.labs.l7.User;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -14,9 +15,9 @@ public class AnswerMSocket implements Runnable {
     String message = "";
     Exception[] exception;
     ObjectOutputStream oos;
-    User[] user;
+    User user;
 
-    public AnswerMSocket(Command _command, DataManager _dataManager, ObjectOutputStream _oos, Exception[] _exception, User[] _user) {
+    public AnswerMSocket(Command _command, DataManager _dataManager, ObjectOutputStream _oos, Exception[] _exception, User _user) {
         command = _command;
         dataManager = _dataManager;
         exception = _exception;
@@ -28,11 +29,13 @@ public class AnswerMSocket implements Runnable {
     public void run() {
         String errMessage = null;
         // token verification
-        if (!(user[0] == null || command.getUserName() == null || command.getToken() == null || command.getUserName().equals(" ") || command.getToken().equals(" "))
+        if (command.getName().equals("add_if_min"))
+            System.out.println();
+        if (!(command.getUserName() == null || command.getToken() == null || command.getUserName().isEmpty() || command.getToken().isEmpty())
                 && !command.getName().equals("login") && !command.getName().equals("help")) {
-            if (!(command.getUserName().equals(user[0].getNick()) &&
-                    command.getToken().equals(user[0].getToken()) &&
-                    !user[0].isTokenValid())) {
+            if (!(command.getUserName().equals(user.getNick()) &&
+                    command.getToken().equals(user.getToken()) &&
+                    user.isTokenValid())) {
                 errMessage = "Wrong token, login again...";
             }
         }
@@ -46,6 +49,13 @@ public class AnswerMSocket implements Runnable {
         }
         try {
             if (!message.isEmpty()) {
+                if (errMessage == null && command.getName().equals("login")){
+                    JSONObject tempJSON = new JSONObject(message);
+                    if (tempJSON.has("token")) {
+                        user.updateToken(tempJSON.getString("token"));
+                        user.setNick(tempJSON.getString("nick"));
+                    }
+                }
                 IOTools.sendObject(oos, message, String.class.getName(), false, true);
             }
         } catch (InterruptedException ignored) {

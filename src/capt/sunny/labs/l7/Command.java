@@ -108,7 +108,7 @@ class CommandParser {
         }
 
         if (user.getNick() != null && user.getToken() != null)
-            return new Command(commandName, firstParameter, secondParameter, object, user.getToken(), user.getNick());
+            return new Command(commandName, firstParameter, secondParameter, object, user.getNick(), user.getToken());
         else
             return new Command(commandName, firstParameter, secondParameter, object, null, null);
     }

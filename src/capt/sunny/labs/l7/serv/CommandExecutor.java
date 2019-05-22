@@ -32,7 +32,7 @@ public class CommandExecutor {
                 }
             case "insert":
                 try {
-                    dataManager.insert(command.getFirstParameter(), command.getObject());
+                    dataManager.insert(command.getObject().getName(), command.getObject());
                     return "Item added\n";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
@@ -52,7 +52,7 @@ public class CommandExecutor {
                 }
             case "add_if_min":
                 try {
-                    return dataManager.add_if_min(command.getObject())?"Item not added":"Item not added";
+                    return dataManager.add_if_min(command.getObject())?"Item added":"Item not added";
                 } catch (JSONException e) {
                     throw new InvalidParameterException(e.getMessage());
                 } catch (NullPointerException e) {

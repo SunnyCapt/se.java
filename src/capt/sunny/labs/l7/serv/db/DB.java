@@ -49,6 +49,7 @@ public class DB {
                     case UPDATE:
                         tempStatement.executeUpdate(_pgSQLRequest);
                         tempStatement.close();
+                        return null;
                     case GET:
                         return new ResultSetWrapper(tempStatement.executeQuery(_pgSQLRequest), tempStatement);
                 }
@@ -118,3 +119,10 @@ GRANT ALL ON TABLE public.s278068_users TO postgres;
 
 GRANT ALL ON TABLE public.s278068_users TO s278068;
  */
+
+/*
+ insert into s278068_objects values('student', 'Ivan_Alexander', 179, '2019-05-18T23:58:40', array[59.9572337,30.3059808,0], 1, FALSE, 'animal');
+insert into s278068_objects values('375', 'Bessmertny', 180, '2019-05-18T23:58:40', array[59.9572338,30.3059807,0], 40, TRUE, 'room');
+insert into s278068_objects values('Valera', 'MATPOCKuH', 180, '2019-05-18T23:58:40', array[59.9572337,30.3059809,0], 30, TRUE, 'human(?)');
+select * from s278068_objects;
+*/

@@ -2,15 +2,14 @@ package capt.sunny.labs.l7.serv;
 
 import capt.sunny.labs.l7.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectOutputStream;
-import java.io.StreamCorruptedException;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.InvalidParameterException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 //import capt.sunny.labs.l7.StringWrapper;
 
@@ -20,11 +19,9 @@ import java.util.concurrent.Executors;
  */
 public class MSocket implements Runnable {
 
-    protected DataManager dataManager;
-    private String fileName;
-    private String message;
-    private Socket client = null;
     private final Exception[] exception = {null};
+    protected DataManager dataManager;
+    private Socket client = null;
     private Command command = null;
     private User user = new User();
     //private Status status = new Status();
@@ -36,9 +33,10 @@ public class MSocket implements Runnable {
      */
     MSocket(Socket _client, DataManager _dataManager) {
         try {
-            fileName = Server.config.getString("full_path_to_file");//full path to the file
             this.client = _client;
             this.dataManager = _dataManager;
+            String threadName = Thread.currentThread().getName();
+            dataManager.putUser(threadName, user);
         } catch (Exception e) {
             System.out.println("\nCan not create new connection(MSocket)");
         }
@@ -49,25 +47,24 @@ public class MSocket implements Runnable {
 
         System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
 
-        try (ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+        try (ObjectOutputStreamWrapper oos = new ObjectOutputStreamWrapper(new ObjectOutputStream(client.getOutputStream()), new ReentrantLock());
              InputStream inputStream = client.getInputStream()) {
             command = null;
+            Thread tokenCheckerThread = new Thread(new TokenChecker(oos, dataManager.getUsers()));
+            tokenCheckerThread.setDaemon(true);
+            tokenCheckerThread.start();
             while (!client.isClosed()) {
 
-                message = "";
+                String message = "";
                 try {
-
-                    //disconnect after 600 seconds of waiting
                     try {
                         command = CommandUtils.readCommand(inputStream);
+                        user.updateLastReqTime();
                     } catch (NoClassDefFoundError e1) {
                         throw new RequestException("");
                     }
                     printRequest(command);
-
                     createAnswerThread(oos);
-
-
                 } catch (RequestException | StreamCorruptedException e) {
                     System.out.printf("Incorrect request from [%s:%d]\n", client.getInetAddress().getHostAddress(), client.getPort());
                     message = "Incorrect request: " + e.getMessage();
@@ -86,7 +83,6 @@ public class MSocket implements Runnable {
                 if (!message.isEmpty()) {
                     IOTools.sendObject(oos, message, String.class.getName());
                 }
-
 
                 if (command != null && command.getName().equals("exit"))
                     break;
@@ -113,7 +109,7 @@ public class MSocket implements Runnable {
 
     }
 
-    private void createAnswerThread(ObjectOutputStream oos) throws Exception {
+    private void createAnswerThread(ObjectOutputStreamWrapper oos) throws Exception {
         Thread answerThread = new Thread(new AnswerMSocket(command, dataManager, oos, exception, user));
         answerThread.start();
         answerThread.interrupt();
@@ -121,7 +117,7 @@ public class MSocket implements Runnable {
     }
 
     private void check() throws Exception {
-        if (exception[0] != null){
+        if (exception[0] != null) {
             throw exception[0];
         }
     }

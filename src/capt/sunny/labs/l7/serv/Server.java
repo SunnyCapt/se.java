@@ -1,6 +1,8 @@
 package capt.sunny.labs.l7.serv;
 
 import capt.sunny.labs.l7.IOTools;
+import capt.sunny.labs.l7.ObjectOutputStreamWrapper;
+import capt.sunny.labs.l7.User;
 import capt.sunny.labs.l7.serv.db.DB;
 import capt.sunny.labs.l7.serv.db.DBException;
 import org.json.JSONObject;
@@ -12,7 +14,10 @@ import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server implements Runnable {
     //Изменять в зависимоссти от оси на которой заупскают
@@ -48,6 +53,7 @@ public class Server implements Runnable {
 
     }
 
+    private int n = 0;
     private DB db = null;
     private DataManager dataManager; // = IOTools.getCreatureMapFromFile(fileName, "UTF-8");
     private String message = "";
@@ -69,11 +75,6 @@ public class Server implements Runnable {
         PORT = _PORT;
     }
 
-    private void init(String[] args) {
-        initDB(args);
-        initCollection();
-    }
-
     public static String getDataDirectory() {
         return DATA_DIR;
     }
@@ -82,10 +83,13 @@ public class Server implements Runnable {
         return numberOfAllowedRequests;
     }
 
-
-
     public static void main(String[] args) {
         new Server(Runtime.getRuntime(), args).run();
+    }
+
+    private void init(String[] args) {
+        initDB(args);
+        initCollection();
     }
 
     private void initDB(String[] args) {
@@ -109,7 +113,7 @@ public class Server implements Runnable {
             dataManager = new DataManager(db);
             dataManager.loadCollection();
         } catch (DBException e) {
-            System.out.println( e.getMessage());
+            System.out.println(e.getMessage());
             System.exit(-1);
             e.printStackTrace();
             //FIX IT !!!!!
@@ -197,10 +201,67 @@ public class Server implements Runnable {
     private void accept(ServerSocket _server) throws IOException {
         Socket client = _server.accept();
         Thread thread = new Thread(new MSocket(client, dataManager));
+        thread.setName("thread" + n);
+        n++;
         //thread.setDaemon(true);
         thread.start();
     }
 
 }
 
+class TokenChecker implements Runnable {
 
+    private final ObjectOutputStreamWrapper oos;
+    private ConcurrentHashMap<String, User> users;
+
+    TokenChecker(ObjectOutputStreamWrapper _oos, ConcurrentHashMap<String, User> _users) {
+        oos = _oos;
+        users = _users;
+    }
+
+    @Override
+    public void run() {
+        Map<String, Boolean> userStatus = new HashMap<>();
+        users.entrySet().stream().filter(c->!(
+                                    c.getValue().getNick().isEmpty() ||
+                                    c.getValue().getNick()==null ||
+                                    c.getValue().getToken().isEmpty() ||
+                                    c.getValue().getToken()==null)
+                                ).forEach(c -> userStatus.put(c.getValue().getNick(), c.getValue().isTokenValid()));
+        while (true) {
+            users.forEach((key, value) -> {
+                Boolean status = value.isTokenValid();
+                if (value.getNick() != null && userStatus.keySet().contains(value.getNick())) {
+                    if (!userStatus.get(value.getNick()).equals(status)) {
+                        if (status)
+                            try {
+                                IOTools.sendObject(oos, value.getNick() + " joined ", String.class.getName());
+                            } catch (IOException e) {
+                                System.out.println("\n[local]: " + key + " died...\n");
+                            } catch (InterruptedException e) {
+                                System.out.println("\n[local]: don't try to close the token checker `-´ \n");
+                            }
+                        else {
+                            try {
+                                IOTools.sendObject(oos, value.getNick() + " left us ", String.class.getName());
+                            } catch (IOException e) {
+                                System.out.println("\n[local]: " + key + " died...\n");
+                            } catch (InterruptedException e) {
+                                System.out.println("\n[local]: don't try to close the token checker `-´ \n");
+                            }
+                            userStatus.remove(value.getNick());
+                        }
+                    }
+                } else {
+                    if (!(value.getNick() == null || !value.getNick().isEmpty())) {
+                        userStatus.put(value.getNick(), value.isTokenValid());
+                    }
+                }
+            });
+            try {
+                Thread.sleep(2);
+            } catch (InterruptedException ignored) {
+            }
+        }
+    }
+}

@@ -19,35 +19,33 @@ public enum Commands {
     INSERT("\ninsert {creature};\n\tдобавить новое существо с заданным именем\n\tпример:" +
             "\n\tinsert {\n" +
             "\t            \"creature\":{\n" +
-            "\t                   \"name\":\"name0\",\n" +
-            "\t                   \"age\":270,\n" +
-            "\t                   \"height\":345.34,\n" +
-            "\t                   \"species\":\"human\",\n" +
-            "\t                   \"isLive\":true,\n" +
-            "\t                   \"creationDate\":\"2019-05-18T23:58:40\",\n" +
-            "\t                   \"location\":{\n" +
-            "\t                           \"x\":23.23,\n" +
-            "\t                           \"y\":23.2,\n" +
-            "\t                           \"z\":25.2\n" +
-            "\t                          }\n" +
-            "\t                   }\n" +
+            "\t               \"name\":\"cat\",\n" +
+            "\t               \"age\":4,\n" +
+            "\t               \"height\":38,\n" +
+            "\t               \"species\":\"animal\",\n" +
+            "\t               \"isLive\":true,\n" +
+            "\t               \"location\":{\n" +
+            "\t                   \"x\":59.9572337,\n" +
+            "\t                   \"y\":30.3059808,\n" +
+            "\t                   \"z\":0\n" +
+            "\t                 }\n" +
+            "\t              }\n" +
             "\t         };\n", new String[]{"creature"}),
     ADD_IF_MIN("\nadd_if_min {details};\n\tдобавить новое существо в коллекцию, если его значение\n\tменьше, чем у наименьшего существа этой коллекции(сравнение по возрасту)\n\tпример:" +
             "\n\tadd_if_min {\n" +
-            "\t              \"creature\":{\n" +
-            "\t                   \"name\":\"name0\",\n" +
-            "\t                   \"age\":270,\n" +
-            "\t                   \"height\":345.34,\n" +
-            "\t                   \"species\":\"human\",\n" +
-            "\t                   \"isLive\":true,\n" +
-            "\t                   \"creationDate\":\"2019-05-18T23:58:40\",\n" +
-            "\t                   \"location\":{\n" +
-            "\t                           \"x\":23.23,\n" +
-            "\t                           \"y\":23.2,\n" +
-            "\t                           \"z\":25.2\n" +
-            "\t                          }\n" +
-            "\t                   }\n" +
-            "\t             };\n", new String[]{"creature"}),
+            "\t            \"creature\":{\n" +
+            "\t               \"name\":\"cat\",\n" +
+            "\t               \"age\":4,\n" +
+            "\t               \"height\":38,\n" +
+            "\t               \"species\":\"animal\",\n" +
+            "\t               \"isLive\":true,\n" +
+            "\t               \"location\":{\n" +
+            "\t                   \"x\":59.9572337,\n" +
+            "\t                   \"y\":30.3059808,\n" +
+            "\t                   \"z\":0\n" +
+            "\t                 }\n" +
+            "\t              }\n" +
+            "\t         };\n", new String[]{"creature"}),
     REMOVE_LOWER("\nremove_lower {String name}; удалить из коллекции всех существ, имена которых меньше, чем заданный\n\tпример:" +
             "\n\tremove_lower{\n" +
             "\t              \"name\":\"name0\"\n" +

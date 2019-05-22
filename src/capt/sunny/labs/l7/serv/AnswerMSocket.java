@@ -2,6 +2,7 @@ package capt.sunny.labs.l7.serv;
 
 import capt.sunny.labs.l7.Command;
 import capt.sunny.labs.l7.IOTools;
+import capt.sunny.labs.l7.ObjectOutputStreamWrapper;
 import capt.sunny.labs.l7.User;
 import org.json.JSONObject;
 
@@ -14,10 +15,10 @@ public class AnswerMSocket implements Runnable {
     DataManager dataManager;
     String message = "";
     Exception[] exception;
-    ObjectOutputStream oos;
+    ObjectOutputStreamWrapper oos;
     User user;
 
-    public AnswerMSocket(Command _command, DataManager _dataManager, ObjectOutputStream _oos, Exception[] _exception, User _user) {
+    public AnswerMSocket(Command _command, DataManager _dataManager, ObjectOutputStreamWrapper _oos, Exception[] _exception, User _user) {
         command = _command;
         dataManager = _dataManager;
         exception = _exception;
@@ -29,7 +30,7 @@ public class AnswerMSocket implements Runnable {
     public void run() {
         String errMessage = null;
         // token verification
-        if (command.getName().equals("add_if_min"))
+        if (command.getName().equals("save"))
             System.out.println();
         if (!(command.getUserName() == null || command.getToken() == null || command.getUserName().isEmpty() || command.getToken().isEmpty())
                 && !command.getName().equals("login") && !command.getName().equals("help")) {

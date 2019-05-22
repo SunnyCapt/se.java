@@ -25,9 +25,36 @@ public class DataManager implements Serializable, AutoCloseable {
     private Comparator<Map.Entry<String, Creature>> comparator = Comparator.comparingInt(a -> a.getValue().getAge());
     private DB db;
 
+    public ConcurrentHashMap<String, User> getUsers() {
+        return users;
+    }
+
+    private ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+
     public DataManager(DB _db) {
         db = _db;
         lastHashCode = 0;
+    }
+
+
+//
+//    private User getUserStatusFrom(String threadName){
+//        if (!users.keySet().contains(threadName))
+//            throw new InvalidParameterException("Wrong thread name");
+//        return users.get(threadName);
+//    }
+
+    public boolean canLogin(String _userName) {
+        String[] thredWithOldSession = {null};
+        users.entrySet().stream().forEach(c -> {
+            if (c.getValue().getNick().equals(_userName) && c.getValue().isTokenValid())
+                thredWithOldSession[0] = c.getKey();
+        });
+        return thredWithOldSession[0] == null;
+    }
+
+    public void putUser(String _threadName, User _user){
+        users.put(_threadName, _user);
     }
 
     public ResultSetWrapper dbRequest(String _pgSQLRequest, DBActionType _actionType) throws DBException {
@@ -49,15 +76,32 @@ public class DataManager implements Serializable, AutoCloseable {
         }
     }
 
+    public boolean dbHas(String condition, String dbName) {
+        try {
+            return dbRequest(String.format("SELECT * FROM %s WHERE %s", dbName, condition), DBActionType.GET).getResultSet().next();
+        } catch (DBException | SQLException e) {
+            return false;
+        }
+    }
+
     /**
      * Добавляет в колекцию новое значение и сортирует ее.
      *
      * @param name    String имя нового объекта
      * @param element Creature
      */
-    public void insert(String name, Creature element) {
-        map.put(name, element);
-        //sortKeys();
+    public boolean insert(String name, Creature element) {
+        boolean result = false;
+        if (map.keySet().contains(name)) {
+            if (map.get(name).getOwnerNick().equals(element.getOwnerNick())) {
+                map.put(name, element);
+                result = true;
+            }
+        } else {
+            map.put(name, element);
+            result = true;
+        }
+        return result;
     }
 
     /**
@@ -77,17 +121,34 @@ public class DataManager implements Serializable, AutoCloseable {
      * @throws FileSavingException выбрасывается в случае, если не удается сохранить файл
      */
     public void save(String owner) throws DBException {
-        String pattern = " UPDATE s278068_objects\n" +
-                "\tSET %s\n" +
-                "\tWHERE name='%s'; ";
+        String updatePattern = " UPDATE s278068_objects SET %s WHERE name='%s'; ";
+        String insertPattern = " INSERT INTO s278068_objects VALUES(%s); ";
+        String deletePattern = " DELETE FROM s278068_objects WHERE name='%s'; ";
 
         if (isCollectionEdited()) {
             try {
+                //deleting
+                ResultSetWrapper objsName = db.request("SELECT name FROM s278068_objects WHERE owner='" + owner + "'", DBActionType.GET);
+                while (objsName.getResultSet().next()) {
+                    String name = objsName.getResultSet().getString("name");
+                    if (!map.keySet().contains(name))
+                        db.request(String.format(deletePattern, name), DBActionType.UPDATE);
+                }
+                //Inserting and updating
                 StringBuilder req = new StringBuilder();
-                map.entrySet().stream().filter(c -> c.getValue().getOwnerNick().equals(owner)).forEach(c -> req.append(String.format(pattern, c.getValue().getStringForDB(), c.getValue().getName())));
-                db.request(req.toString(), DBActionType.UPDATE);
+                if (!map.isEmpty()) {
+                    map.entrySet().stream().filter(c -> c.getValue().getOwnerNick().equals(owner)).forEach(
+                            c -> {
+                                if (dbHas("name='" + c.getKey() + "'", "s278068_objects"))
+                                    req.append(String.format(updatePattern, c.getValue().getStringForDBWithVarNames(), c.getValue().getName()));
+                                else
+                                    req.append(String.format(insertPattern, c.getValue().getStringForDB()));
+                            }
+                    );
+                    db.request(req.toString(), DBActionType.UPDATE);
+                }
                 lastHashCode = hashCode();
-            } catch (DBException e) {
+            } catch (DBException | SQLException e) {
                 throw new DBException("Cannt save collection, sorry: " + e.getMessage());
             }
 
@@ -106,11 +167,11 @@ public class DataManager implements Serializable, AutoCloseable {
         boolean result = false;
         if (map.isEmpty()) {
             map.put(element.getName(), element);
-            result =true;
+            result = true;
         } else {
             if (element.compareTo(map.entrySet().stream().min(comparator).get().getValue()) < 0) {
                 map.put(String.valueOf(element.hashCode()), element);
-                result=true;
+                result = true;
             }
         }
         return result;
@@ -145,7 +206,7 @@ public class DataManager implements Serializable, AutoCloseable {
     }
 
     /**
-     * Удаляет все записи из коллекции, у которых ключ меньше переданного.
+     * Удаляет все записи из коллекции, у имена которых меньше переданного.
      *
      * @param name String имя для сравнений
      */
@@ -193,7 +254,7 @@ public class DataManager implements Serializable, AutoCloseable {
     }
 
     public void loadCollection() throws DBException {
-        ResultSetWrapper result = db.request("SELECT * FROM s278068_objects", DBActionType.GET);
+        ResultSetWrapper result = db.request("SELECT * FROM s278068_objects;", DBActionType.GET);
         try {
             while (result.getResultSet().next()) {
                 String userName = result.getResultSet().getString("owner");
@@ -204,7 +265,7 @@ public class DataManager implements Serializable, AutoCloseable {
                 gettingUser.close();
 
 
-                insert(result.getResultSet().getString("name"), new Creature(
+                map.put(result.getResultSet().getString("name"), new Creature(
                         result.getResultSet().getString("species"),
                         result.getResultSet().getInt("age"),
                         result.getResultSet().getString("name"),
@@ -280,7 +341,10 @@ class SUserUtils {
         try {
             Object result = dataManager.getOneDBFild("SELECT user_name FROM s278068_users WHERE user_name='" + _login + "' and upassword='" + _password + "'; ");
             if (result != null)
-                return getRandomToken();
+                if (dataManager.canLogin(_login))
+                    return getRandomToken();
+                else
+                    throw new LoginException("This application does not support multiple sessions.");
             else
                 throw new LoginException("Wrong login/password");
         } catch (DBException e) {

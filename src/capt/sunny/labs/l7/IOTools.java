@@ -264,12 +264,12 @@ public class IOTools {
         System.out.println();
     }
 
-    public static <T> void sendObject(ObjectOutputStream oos, T obj, String _className) throws IOException, InterruptedException {
+    public static <T> void sendObject(ObjectOutputStreamWrapper oos, T obj, String _className) throws IOException, InterruptedException {
         sendObject(oos, obj, _className, false, false);
     }
 
 
-    public static <T> void sendObject(ObjectOutputStream oos, T obj, String _className, boolean needProcessBar, boolean interruptFlage) throws IOException, InterruptedException {
+    public static <T> void sendObject(ObjectOutputStreamWrapper oos, T obj, String _className, boolean needProcessBar, boolean interruptFlage) throws IOException, InterruptedException {
         List<Wrapper> wrappedSerializedCommand = WrapperUtils.wrapUp(IOTools.<T>getSerializedObj(obj), _className);
         int onePercentOfChunks = -1;
         String progressPatt = "#";
@@ -286,7 +286,6 @@ public class IOTools {
 
         for (int i = 0; i < wrappedSerializedCommand.size(); i++) {
             oos.write(IOTools.getSerializedObj(wrappedSerializedCommand.get(i)));
-            oos.flush();
             if (!interruptFlage)
                 Thread.sleep(100);
             if (needProcessBar) {

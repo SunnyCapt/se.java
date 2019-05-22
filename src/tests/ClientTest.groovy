@@ -1,7 +1,6 @@
-
-
 import capt.sunny.labs.l7.client.Client
 import org.junit.Test
+
 
 class ClientTest extends GroovyTestCase {
 
@@ -19,7 +18,7 @@ enum Commands {
     INFO("info;"),
     SAVE("save;"),
     HELP("help;"),
-    INSERT("insert {\"creature\":{\"name\":\"%s\",\"age\":270,\"height\":345.34, \"species\":\"human\",\"isLive\":true,\"creationDate\":\"2019-05-18T23:58:40\",\"location\":{\"x\":23.23,\"y\":23.2,\"z\":25.2}}};"),
+    INSERT("insert {\"creature\":{\"name\":\"%s\",\"age\":250,\"height\":345.34, \"species\":\"human\",\"isLive\":true,\"creationDate\":\"2019-05-18T23:58:40\",\"location\":{\"x\":23.23,\"y\":23.2,\"z\":25.2}}};"),
     ADD_IF_MIN("add_if_min {\"creature\":{\"name\":\"%s\",\"age\":270,\"height\":345.34, \"species\":\"human\",\"isLive\":true,\"creationDate\":\"2019-05-18T23:58:40\",\"location\":{\"x\":23.23,\"y\":23.2,\"z\":25.2}}};"),
     REMOVE_LOWER("remove_lower {\"name\":\"%s\"};"),
     REMOVE("remove {\"name\":\"%s\"};"),
@@ -27,10 +26,10 @@ enum Commands {
 
     public static String all =  LOGIN.command + "\n\r" +
                                 HELP.command + "\n\r" +
-                                String.format(ADD_IF_MIN.command, "pers#0") + "\n\r" +
-                                String.format(INSERT.command, "pers#0") + "\n\r" +
-                                String.format(REMOVE_LOWER.command, "pers#0") + "\n\r" +
-                                String.format(REMOVE.command, "pers#0") + "\n\r" +
+                                String.format(ADD_IF_MIN.command, "pers#4") + "\n\r" +
+                                String.format(INSERT.command, "pers#4") + "\n\r" +
+                                String.format(REMOVE_LOWER.command, "pers#4") + "\n\r" +
+                                //String.format(REMOVE.command, "pers#4") + "\n\r" +
                                 SHOW.command + "\n\r" +
                                 INFO.command + "\n\r" +
                                 SAVE.command + "\n\r" +

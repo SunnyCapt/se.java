@@ -173,8 +173,12 @@ public class Creature implements CreatureInt, Comparable, Serializable {
         return res;
     }
 
+    public String getStringForDBWithVarNames() {
+        return String.format(" name='%s', owner='%s', size=%s, creation_date='%s', location=array[%f,%f,%f], age=%d, is_live=%b, species='%s' ", name, ownerNick, String.valueOf(size).replace(',','.'), creationDate.toString(), location.get()[0], location.get()[1], location.get()[2], age, isLive, species);
+    }
+
     public String getStringForDB() {
-        return String.format(" name='%s', owner='%s', size=%f, creation_date='%s', location=array[%f,%f,%f], age=%d, is_live%b, species='%s' ", name, ownerNick, size, creationDate.toString(), location.get()[0], location.get()[1], location.get()[2], age, isLive, species);
+        return String.format(" '%s', '%s', %s, '%s', array[%s,%s,%s], %d, %b, '%s' ", name, ownerNick, String.valueOf(size).replace(',','.'), creationDate.toString(), String.valueOf(location.get()[0]).replace(',','.'), String.valueOf(location.get()[0]).replace(',','.'), String.valueOf(location.get()[0]).replace(',','.'), age, isLive, species);
     }
 
     //FIX IT !!!!!!!!!!

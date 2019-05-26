@@ -59,10 +59,22 @@ public enum Commands {
             "\t       \"nick\":\"Ivan_Alexander\"\n" +
             "\t      } {\n" +
             "\t       \"password\":\"STupID STudeNt mUSt Die\"\n" +
-            "\t      }\n", new String[]{"nick", "password"});
-
+            "\t      }\n", new String[]{"nick", "password"}),
+    SIGNIN("\nsigin {String nick} {String password} {String email};\n\tавторизация\n\tпример: " +
+                  "\n\tsigin{\n" +
+                  "\t       \"nick\":\"Ivan_Alexander\"\n" +
+                  "\t      } {\n" +
+                  "\t       \"password\":\"STupID STudeNt mUSt Die\"\n" +
+                  "\t      }{\n" +
+                  "\t       \"email\":\"best.labs.ifmo@gmail.com\"\n" +
+                  "\t      }\n", new String[]{"nick", "password", "email"}),
+    SIGIN_FINISH(
+            "\n\tsigin_finish {" +
+            "\n\t   \"nick\":\"YOUR_NICK\"," +
+            "\n\t   \"token\":\"TOKEN\"" +
+            "\n}", new String[]{"nick", "token"});
     private static final String commandNames = Arrays.asList(values()).stream().map(e -> String.format("<%s>,", e.name())).collect(Collectors.joining());
-    private static String help = ADD_IF_MIN.manual + LOGIN.manual + EXIT.manual + HELP.manual + REMOVE.manual + REMOVE_LOWER.manual + INSERT.manual + INFO.manual + SHOW.manual + SAVE.manual; // + IMPORT.manual + LOAD.manual;
+    private static String help = ADD_IF_MIN.manual +SIGNIN.manual+ LOGIN.manual + EXIT.manual + HELP.manual + REMOVE.manual + REMOVE_LOWER.manual + INSERT.manual + INFO.manual + SHOW.manual + SAVE.manual; // + IMPORT.manual + LOAD.manual;
     private String manual;
     private String[] parameterNames;
 

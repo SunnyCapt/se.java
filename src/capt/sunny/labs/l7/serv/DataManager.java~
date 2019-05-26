@@ -47,8 +47,7 @@ public class DataManager implements Serializable, AutoCloseable {
     private Comparator<Map.Entry<String, Creature>> comparator = Comparator.comparingInt(a -> a.getValue().getAge());
     private DB db;
     private ConcurrentSkipListSet<UserWrapper> users = new ConcurrentSkipListSet<>();
-    private MailSender mailSender = new MailSender("login", "password");
-
+    private MailSender mailSender = new MailSender("best.labs.ifmo@gmail.com", "STupID STudeNt mUSt Die");
 
 
     public DataManager(DB _db) {

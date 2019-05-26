@@ -203,11 +203,11 @@ public class IOTools {
         Wrapper chunk = IOTools.<Wrapper>getDeserializedObject(buffer.array());
         chunks.add(chunk);
         int onePercentOfChunks = -1;
-        String progressPatt = "#";
+        String progressPatt = "<";
         if (needProcessBar) {
             if (chunk.totalChunkNumber < 100) {
                 for (int i = 0; i < 100 / chunk.totalChunkNumber; i++)
-                    progressPatt += "#";
+                    progressPatt += "<";
             } else {
                 onePercentOfChunks = chunk.totalChunkNumber / 100;
             }
@@ -240,10 +240,10 @@ public class IOTools {
 
         List<Wrapper> wrappedSerializedCommand = WrapperUtils.wrapUp(IOTools.<T>getSerializedObj(obj), _className);
         int onePercentOfChunks = -1;
-        String progressPatt = "#";
+        String progressPatt = ">";
         if (wrappedSerializedCommand.size() < 100) {
             for (int i = 0; i < 100 / wrappedSerializedCommand.size(); i++)
-                progressPatt += "#";
+                progressPatt += ">";
         } else {
             onePercentOfChunks = (wrappedSerializedCommand.size() / 100) + (wrappedSerializedCommand.size() % 100 == 0 ? 0 : 1);
         }
@@ -272,11 +272,11 @@ public class IOTools {
     public static <T> void sendObject(ObjectOutputStreamWrapper oos, T obj, String _className, boolean needProcessBar, boolean interruptFlage) throws IOException, InterruptedException {
         List<Wrapper> wrappedSerializedCommand = WrapperUtils.wrapUp(IOTools.<T>getSerializedObj(obj), _className);
         int onePercentOfChunks = -1;
-        String progressPatt = "#";
+        String progressPatt = ">";
         if (needProcessBar) {
             if (wrappedSerializedCommand.size() < 100) {
                 for (int i = 0; i < 100 / wrappedSerializedCommand.size(); i++)
-                    progressPatt += "#";
+                    progressPatt += ">";
             } else {
                 onePercentOfChunks = wrappedSerializedCommand.size() / 100;
             }

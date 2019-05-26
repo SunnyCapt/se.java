@@ -17,6 +17,7 @@ public class Command implements Serializable {
     protected String name;
     protected String firstParameter;
     protected String secondParameter;
+    protected String thirdParameter;
     protected Creature object;
     private String token;
 
@@ -30,12 +31,13 @@ public class Command implements Serializable {
 
     private String userName;
 
-    public Command(String _name, String _firstParameters, String _secondParameter, Creature _object, String _userName, String _token) throws InvalidParameterException {
+    public Command(String _name, String _firstParameters, String _secondParameter, String _thirdParameter, Creature _object, String _userName, String _token) throws InvalidParameterException {
         if (!Commands.check(_name))
             throw new InvalidParameterException("\nUnknown command\n");
         name = _name;
         firstParameter = _firstParameters;
         secondParameter = _secondParameter;
+        thirdParameter = _thirdParameter;
         object = _object;
         token = _token;
         userName = _userName;
@@ -52,6 +54,11 @@ public class Command implements Serializable {
     public String getSecondParameter() {
         return secondParameter;
     }
+
+    public String getThirdParameter() {
+        return thirdParameter;
+    }
+
 
     public Creature getObject() {
         return object;
@@ -81,6 +88,7 @@ class CommandParser {
         }
         String firstParameter = null;
         String secondParameter = null;
+        String thirdParameter = null;
         Creature object = null;
         if (commandParameters.length >= 1) {
             try {
@@ -102,15 +110,23 @@ class CommandParser {
                         throw new InvalidParameterException("\nWrong parameters for: " + commandName + "\n");
                     }
                 }
+                if (commandParameters.length == 3) {
+                    tempObj = new JSONObject(rawSecondParameter);
+                    if (tempObj.has("email") && commandParameters[1].equals("email")) {
+                        thirdParameter = tempObj.getString("email");
+                    } else {
+                        throw new InvalidParameterException("\nWrong parameters for: " + commandName + "\n");
+                    }
+                }
             } catch (JSONException e) {
                 throw new InvalidParameterException(e.getMessage());
             }
         }
 
         if (user.getNick() != null && user.getToken() != null)
-            return new Command(commandName, firstParameter, secondParameter, object, user.getNick(), user.getToken());
+            return new Command(commandName, firstParameter, secondParameter, thirdParameter, object, user.getNick(), user.getToken());
         else
-            return new Command(commandName, firstParameter, secondParameter, object, null, null);
+            return new Command(commandName, firstParameter, secondParameter, thirdParameter, object, null, null);
     }
 }
 

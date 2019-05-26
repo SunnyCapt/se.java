@@ -5,14 +5,13 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.NoSuchElementException;
-
-
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 
 public class Client implements Runnable {
@@ -22,10 +21,12 @@ public class Client implements Runnable {
     private SocketChannel channel = null;
     private User me = new User();
     private BufferedReader reader;
+    private ReaderThread objReader = null;
 
 
     public Client(Runtime runtime, BufferedReader _reader) {
         reader = _reader;
+
         runtime.addShutdownHook(new Thread(() -> {
             try {
                 Thread.sleep(1);
@@ -86,14 +87,28 @@ public class Client implements Runnable {
                 try {
                     JSONObject tempJSON = new JSONObject((String) obj);
                     obj = tempJSON.getString("message");
-                    user.setNick(tempJSON.getString("nick")==""?null:tempJSON.getString("nick"));
-                    user.updateToken(tempJSON.getString("token")==""?null:tempJSON.getString("token"));
+                    user.setNick(tempJSON.getString("nick") == "" ? null : tempJSON.getString("nick"));
+                    user.updateToken(tempJSON.getString("token") == "" ? null : tempJSON.getString("token"));
                 } catch (Exception c) {
                     obj = c.getMessage();
                 }
                 if (((String) obj).contains("Wrong login/password")) {
                     status.do_NOT_LOGGED_IN();
-                }else{
+                } else {
+                    status.do_OK();
+                }
+            }else if (status.is_SIGIN_FINISH()){
+                try {
+                    JSONObject tempJSON = new JSONObject((String) obj);
+                    obj = tempJSON.getString("message");
+                    user.setNick(tempJSON.getString("nick") == "" ? null : tempJSON.getString("nick"));
+                    user.updateToken(tempJSON.getString("token") == "" ? null : tempJSON.getString("token"));
+                } catch (Exception c) {
+                    obj = c.getMessage();
+                }
+                if (((String) obj).contains("Wrong login/password")) {
+                    status.do_NOT_LOGGED_IN();
+                } else {
                     status.do_OK();
                 }
             }
@@ -104,7 +119,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        try  {
+        try {
             System.out.print("Sign of the end of the command - ';'\n\n");
             Status status = new Status();
             main_cycle:
@@ -113,6 +128,10 @@ public class Client implements Runnable {
                 try (SocketChannel preChannel = getChannel(HOST, PORT);
                      ObjectInputStream ois = new ObjectInputStream(Channels.newInputStream(preChannel))) {
                     channel = preChannel;
+                    objReader = new ReaderThread(ois, System.out);
+                    Thread threadOfReader = new Thread(objReader);
+                    threadOfReader.setDaemon(true);
+                    threadOfReader.start();
                     command_cycle:
                     for (; ; ) {
                         message = "";
@@ -122,10 +141,18 @@ public class Client implements Runnable {
 
                             Command command = CommandUtils.readCommand(reader, me);
                             if (command.getName().equals("login")) status.do_LOGGING();
-
+                            //if (command.getName().equals("signin")) status.do_SIGIN();
+                            if (command.getName().equals("signin_finish")) status.do_SIGIN_FINISH();
+                            if (command.getName().equals("exit"))
+                                objReader.close();
                             IOTools.<Command>sendObject(channel, command, Command.class.getName());
-                            if (command.getName().equals("exit")) throw new IOException(" you are disconnected from the server\n");
-                            Object obj = IOTools.readObject(ois, true);
+                            if (command.getName().equals("exit"))
+                                throw new IOException(" you are disconnected from the server\n");
+                            try {
+                                Thread.sleep(2000);
+                            } catch (InterruptedException ignored) {
+                            }
+                            Object obj = objReader.getFromQueue();
 
                             checkAndPrintResp(obj, status, me);
 
@@ -161,7 +188,7 @@ public class Client implements Runnable {
                     } catch (NullPointerException e2) {
                         break main_cycle;
                     }
-                } catch (InterruptedException | ClassNotFoundException e) {
+                } catch (InterruptedException e) {
                     System.out.println("\n[local] " + e.getMessage());
                 } catch (NullPointerException e) {
                     break main_cycle;
@@ -180,13 +207,61 @@ public class Client implements Runnable {
     private void exit(String message) {
         if (!message.isEmpty())
             System.out.println(message);
+        if (objReader != null)
+            objReader.close();
         System.exit(0);
     }
-
 
 
 }
 
 
+class ReaderThread implements Runnable, Closeable {
+
+    private ObjectInputStream ois;
+    private boolean keepThread = true;
+    private Queue<Object> queue = new PriorityQueue<>();
+    private PrintStream out;
+
+    public ReaderThread(ObjectInputStream _ois, PrintStream _out) {
+        ois = _ois;
+        out = _out;
+    }
+
+    @Override
+    public void run() {
+        while (keepThread ) {
+            try {
+                Object obj = IOTools.readObject(ois, false);
+                String resp = (String) obj;
+                if (resp.startsWith("{us}"))
+                    out.println("\n\n" + resp.substring(4) +"\n\n");
+                else
+                    queue.add(obj);
+            } catch (IOException e) {
+                if (!e.getMessage().contains("stream header: 00000000"))System.out.println("Cannt read server responces");
+            } catch (ClassNotFoundException e) {
+                if (!e.getMessage().contains("stream header: 00000000"))System.out.println("Cannt read server responce: unknown data");
+            } catch (InterruptedException e) {
+                close();
+            } catch (Exception e) {
+                System.out.println("Cannt read server responce: unknown error: " + e.getMessage());
+                close();
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        keepThread = false;
+    }
+
+    public Object getFromQueue() {
+
+        while (queue.size() == 0) {
+        }
+        return queue.poll();
+    }
+}
 
 

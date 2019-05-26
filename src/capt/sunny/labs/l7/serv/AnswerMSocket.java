@@ -30,10 +30,8 @@ public class AnswerMSocket implements Runnable {
     public void run() {
         String errMessage = null;
         // token verification
-        if (command.getName().equals("save"))
-            System.out.println();
         if (!(command.getUserName() == null || command.getToken() == null || command.getUserName().isEmpty() || command.getToken().isEmpty())
-                && !command.getName().equals("login") && !command.getName().equals("help")) {
+                && !command.getName().equals("login") && !command.getName().equals("help") && !command.getName().equals("signin") && !command.getName().equals("signin_finish")) {
             if (!(command.getUserName().equals(user.getNick()) &&
                     command.getToken().equals(user.getToken()) &&
                     user.isTokenValid())) {
@@ -50,11 +48,11 @@ public class AnswerMSocket implements Runnable {
         }
         try {
             if (!message.isEmpty()) {
-                if (errMessage == null && command.getName().equals("login")){
+                if (errMessage == null && (command.getName().equals("login")||command.getName().equals("signin_finish"))){
                     JSONObject tempJSON = new JSONObject(message);
                     if (tempJSON.has("token")) {
                         user.updateToken(tempJSON.getString("token"));
-                        user.setNick(tempJSON.getString("nick"));
+                        user.setNick(command.getFirstParameter());
                     }
                 }
                 IOTools.sendObject(oos, message, String.class.getName(), false, true);

@@ -1,8 +1,6 @@
 package capt.sunny.labs.l7.serv;
 
 import capt.sunny.labs.l7.IOTools;
-import capt.sunny.labs.l7.ObjectOutputStreamWrapper;
-import capt.sunny.labs.l7.User;
 import capt.sunny.labs.l7.serv.db.DB;
 import capt.sunny.labs.l7.serv.db.DBException;
 import org.json.JSONObject;
@@ -17,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Server implements Runnable {
     //Изменять в зависимоссти от оси на которой заупскают
@@ -112,6 +109,11 @@ public class Server implements Runnable {
                 throw new DBException("Cannt load collection from db: db not initialized");
             dataManager = new DataManager(db);
             dataManager.loadCollection();
+
+            Thread tokenCheckerThread = new Thread(new TokenChecker(dataManager));
+            tokenCheckerThread.setDaemon(true);
+            tokenCheckerThread.start();
+
         } catch (DBException e) {
             System.out.println(e.getMessage());
             System.exit(-1);
@@ -128,6 +130,7 @@ public class Server implements Runnable {
                 message = "";
                 try (ServerSocket server = new ServerSocket(PORT, 1000, Inet4Address.getByName(HOST))) {
                     System.out.printf("Server is running on port %d\n", server.getLocalPort());
+
                     accept_cycle:
                     while (!server.isClosed()) {
                         message = "";
@@ -211,50 +214,41 @@ public class Server implements Runnable {
 
 class TokenChecker implements Runnable {
 
-    private final ObjectOutputStreamWrapper oos;
-    private ConcurrentHashMap<String, User> users;
+    private DataManager dataManager;
 
-    TokenChecker(ObjectOutputStreamWrapper _oos, ConcurrentHashMap<String, User> _users) {
-        oos = _oos;
-        users = _users;
+    TokenChecker(DataManager _dataManager) {
+        dataManager = _dataManager;
     }
 
     @Override
     public void run() {
         Map<String, Boolean> userStatus = new HashMap<>();
-        users.entrySet().stream().filter(c->!(
-                                    c.getValue().getNick().isEmpty() ||
-                                    c.getValue().getNick()==null ||
-                                    c.getValue().getToken().isEmpty() ||
-                                    c.getValue().getToken()==null)
-                                ).forEach(c -> userStatus.put(c.getValue().getNick(), c.getValue().isTokenValid()));
+        dataManager.getUsers().stream().filter(c -> !(
+                c.getUser().getNick() == null ||
+                        c.getUser().getToken() == null ||
+                        c.getUser().getNick().isEmpty() ||
+                        c.getUser().getToken().isEmpty())
+        ).forEach(c -> userStatus.put(c.getUser().getNick(), c.getUser().isTokenValid()));
         while (true) {
-            users.forEach((key, value) -> {
-                Boolean status = value.isTokenValid();
-                if (value.getNick() != null && userStatus.keySet().contains(value.getNick())) {
-                    if (!userStatus.get(value.getNick()).equals(status)) {
-                        if (status)
-                            try {
-                                IOTools.sendObject(oos, value.getNick() + " joined ", String.class.getName());
-                            } catch (IOException e) {
-                                System.out.println("\n[local]: " + key + " died...\n");
-                            } catch (InterruptedException e) {
-                                System.out.println("\n[local]: don't try to close the token checker `-´ \n");
+            dataManager.getUsers().forEach(cc -> {
+                Boolean status = cc.getUser().isTokenValid();
+                if (cc.getUser().getNick() != null && userStatus.keySet().contains(cc.getUser().getNick())) {
+                    if (!userStatus.get(cc.getUser().getNick()).equals(status)) {
+                        if (status) {
+                            System.out.println("\n\n" + cc.getUser().getNick() + " joined " + "\n\n");
+                            sendToEach(cc.getUser().getNick() + " joined ", cc);
+                        } else {
+                            {
+                                System.out.println("\n\n" + cc.getUser().getNick() + " left us "
+                                        + "\n\n");
+                                sendToEach(cc.getUser().getNick() + " joined ", cc);
                             }
-                        else {
-                            try {
-                                IOTools.sendObject(oos, value.getNick() + " left us ", String.class.getName());
-                            } catch (IOException e) {
-                                System.out.println("\n[local]: " + key + " died...\n");
-                            } catch (InterruptedException e) {
-                                System.out.println("\n[local]: don't try to close the token checker `-´ \n");
-                            }
-                            userStatus.remove(value.getNick());
+                            userStatus.remove(cc.getUser().getNick());
                         }
                     }
                 } else {
-                    if (!(value.getNick() == null || !value.getNick().isEmpty())) {
-                        userStatus.put(value.getNick(), value.isTokenValid());
+                    if (!(cc.getUser().getNick() == null || !cc.getUser().getNick().isEmpty())) {
+                        userStatus.put(cc.getUser().getNick(), cc.getUser().isTokenValid());
                     }
                 }
             });
@@ -263,5 +257,16 @@ class TokenChecker implements Runnable {
             } catch (InterruptedException ignored) {
             }
         }
+    }
+
+
+    private void sendToEach(String _message, UserWrapper without) {
+        dataManager.getUsers().stream().filter(c -> c!=null&&c.getUser()!=null&&c.getUser().equals(without.getUser())).forEach(c -> {
+            try {
+                IOTools.sendObject(c.getOOSW(), "{us}"+ without.getUser().getNick() + _message, String.class.getName());
+            } catch (Exception e) {
+                System.out.println("\n[local]: " + c.getUser().getNick() + " died...: " + e.getMessage());
+            }
+        });
     }
 }

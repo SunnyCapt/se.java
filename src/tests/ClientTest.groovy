@@ -6,7 +6,7 @@ class ClientTest extends GroovyTestCase {
 
     @Test
     void testRun() {
-        Client client = new Client(Runtime.getRuntime(), new BufferedReader(new StringReader("localhost:1488\n\r" + Commands.all)));
+        Client client = new Client(Runtime.getRuntime(), new BufferedReader(new StringReader("localhost:1399\n\r" + Commands.all)));
         client.run();
 
     }

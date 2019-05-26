@@ -35,8 +35,6 @@ public class MSocket implements Runnable {
         try {
             this.client = _client;
             this.dataManager = _dataManager;
-            String threadName = Thread.currentThread().getName();
-            dataManager.putUser(threadName, user);
         } catch (Exception e) {
             System.out.println("\nCan not create new connection(MSocket)");
         }
@@ -47,12 +45,13 @@ public class MSocket implements Runnable {
 
         System.out.printf("New connection: %s:%d\n", client.getInetAddress().getHostAddress(), client.getPort());
 
-        try (ObjectOutputStreamWrapper oos = new ObjectOutputStreamWrapper(new ObjectOutputStream(client.getOutputStream()), new ReentrantLock());
+        try (ObjectOutputStreamWrapper oosw = new ObjectOutputStreamWrapper(new ObjectOutputStream(client.getOutputStream()), new ReentrantLock());
              InputStream inputStream = client.getInputStream()) {
             command = null;
-            Thread tokenCheckerThread = new Thread(new TokenChecker(oos, dataManager.getUsers()));
-            tokenCheckerThread.setDaemon(true);
-            tokenCheckerThread.start();
+            dataManager.putUser(new UserWrapper(user, oosw));
+//            Thread tokenCheckerThread = new Thread(new TokenChecker(oosw, dataManager.getUsers()));
+//            tokenCheckerThread.setDaemon(true);
+//            tokenCheckerThread.start();
             while (!client.isClosed()) {
 
                 String message = "";
@@ -64,7 +63,7 @@ public class MSocket implements Runnable {
                         throw new RequestException("");
                     }
                     printRequest(command);
-                    createAnswerThread(oos);
+                    createAnswerThread(oosw);
                 } catch (RequestException | StreamCorruptedException e) {
                     System.out.printf("Incorrect request from [%s:%d]\n", client.getInetAddress().getHostAddress(), client.getPort());
                     message = "Incorrect request: " + e.getMessage();
@@ -81,7 +80,7 @@ public class MSocket implements Runnable {
                 }
 
                 if (!message.isEmpty()) {
-                    IOTools.sendObject(oos, message, String.class.getName());
+                    IOTools.sendObject(oosw, message, String.class.getName());
                 }
 
                 if (command != null && command.getName().equals("exit"))

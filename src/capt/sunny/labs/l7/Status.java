@@ -35,11 +35,14 @@ public class Status {
         status = AuthStatus.LOGGING;
     }
 
+    public void do_SIGIN_FINISH(){status = AuthStatus.SIGIN_FINISH;}
 
+    public boolean is_SIGIN_FINISH(){return  (status == AuthStatus.SIGIN_FINISH);}
 }
 
 enum AuthStatus {
     OK,
     NOT_LOGGED_IN,
-    LOGGING;
+    LOGGING,
+    SIGIN_FINISH;
 }

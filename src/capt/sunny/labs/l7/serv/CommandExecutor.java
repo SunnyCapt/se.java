@@ -30,6 +30,8 @@ public class CommandExecutor {
                 } catch (LoginException e) {
                     return String.format(patt,"","",e.getMessage());
                 }
+            case "signin":
+                return SUserUtils.signin(command.getFirstParameter(), command.getSecondParameter(), command.getThirdParameter(), dataManager);
             case "insert":
                 try {
                     dataManager.insert(command.getObject().getName(), command.getObject());
